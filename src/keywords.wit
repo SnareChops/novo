@@ -1,0 +1,10 @@
+// Keywords interface for WAT compiler
+interface keywords {
+    // Check if a string is a keyword
+    export is-keyword: func(str-ptr: u32, str-len: u32) -> bool
+}
+
+world keywords-component {
+    import memory
+    export keywords
+}

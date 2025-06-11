@@ -1,0 +1,41 @@
+// Lexer interface for Novo compiler
+interface lexer {
+    // Token types
+    enum token-type {
+        lparen, rparen,
+        identifier, keyword,
+        integer, float, string,
+        eof, error,
+        lbrace, rbrace,
+        colon, double-colon,
+        assign, arrow, hyphen
+    }
+
+    // Token structure
+    record token {
+        type: token-type,
+        start: u32,
+        length: u32,
+        value: u32, // Used for numeric values
+        line: u16,
+        column: u16
+    }
+
+    // Initialize lexer with source text
+    export init-lexer: func(source-ptr: u32, source-len: u32) -> bool
+
+    // Get the next token from input
+    export next-token: func() -> token
+
+    // Character classification utilities
+    export is-whitespace: func(char: u32) -> bool
+    export is-alpha: func(char: u32) -> bool
+    export is-digit: func(char: u32) -> bool
+    export is-identifier-char: func(char: u32) -> bool
+}
+
+world lexer-component {
+    import memory
+    import keywords
+    export lexer
+}

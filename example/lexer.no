@@ -1,0 +1,49 @@
+variant Token {
+  Comment(string),
+  LParen,
+  RParen,
+  LBracket,
+  RBracket,
+  LBrace,
+  RBrace,
+  Bool(bool),
+  Word(string),
+  Number(string),
+  Period,
+  Colon,
+  Comma,
+  EOL,
+}
+
+// ptr with value of i32 at address 0x1000
+state: *i32@0x1000
+pos: *i32@0x1004
+token: *Token@0x100c
+
+func is-whitespace(c: char) -> bool {
+  if c == 0x20 return true
+  if c == 0x09 return true
+  if c == 0x0a return true
+  if c == 0x0d return true
+  return false
+}
+
+func is-alpha(c:char) -> bool {
+  if c >= 'A' && c <= 'Z' return true
+  if c >= 'a' && c <= 'z' return true
+  return false
+}
+
+func is-digit(c:char) -> bool {
+  if c >= '0' && c <= '9' return true
+  return false
+}
+
+export func init-lexer(ptr:i32, len:i32) {
+
+}
+
+
+func next-token() -> i32 {
+  isEscaped := false
+}
