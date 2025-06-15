@@ -1,0 +1,68 @@
+// Novo Lexer Identifier Scanning
+// Functions for scanning and validating identifiers
+
+component novo-lexer-identifiers {
+  // Import memory from memory module
+  import memory "memory"
+
+  // Import token constants and utility functions
+  import "tokens".{TOKEN_ERROR, TOKEN_IDENTIFIER}
+  import "char-utils".{is-letter, is-kebab-char, is-valid-word}
+  import "keywords".{is-keyword}
+  import "lexer-token-storage".{store-identifier}
+
+  export func scan-identifier(pos:i32) -> result<i32,i32> {
+    current := pos
+    start-pos := pos
+    word-start : i32 = 0
+    prefixed := false
+
+    // Check for % prefix
+    if i32::load(current) == '%' {
+      prefixed = true
+      current++
+    }
+
+    // First character must be a letter
+    if !is-letter(i32::load(current)) {
+      return error(current)
+    }
+
+    // Scan the identifier
+    word-start = current
+    while {
+      current++
+      // Check for hyphen
+      if i32::load(current) == '-' {
+        // Validate previous word
+        if !is-valid-word(word-start, current) return error(current)
+
+        // Start new word after hyphen
+        current++
+        word-start = current
+        continue
+      }
+
+      // Continue if valid identifier character
+      if is-kebab-char(i32::load(current)) continue
+    }
+
+    // Validate final word
+    if !is-valid-word(word-start, current) return error(current)
+
+    // Calculate length excluding %
+    len := current - start-pos
+
+    // If not prefixed, check if it's a keyword
+    typ : token-type = TOKEN_IDENTIFIER
+    if !is-prefixed {
+      token-type = is-keyword(start-pos, len)
+    }
+
+    // Store the identifier
+    store-identifier(start-pos, len)
+
+    // Return token type and next position
+    return token-type, current
+  }
+}

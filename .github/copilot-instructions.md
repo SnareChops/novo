@@ -29,6 +29,12 @@ This is a WebAssembly Text Format (.wat) project that compiles to WebAssembly bi
 - Prefix exported functions with descriptive names
 - Use clear parameter and return type annotations
 
+### File Organization
+- Files exceeding 300 lines of code should be considered for refactoring into smaller files
+- Keep related functionality together when splitting files
+- Maintain clear module boundaries and logical separation
+- This is a guideline, not a hard requirement, but should always be evaluated as files grow
+
 ### Memory Management
 - Document memory regions and their purposes
 - Use consistent patterns for memory allocation/deallocation
@@ -62,12 +68,12 @@ This is a WebAssembly Text Format (.wat) project that compiles to WebAssembly bi
 ## Build and Testing
 
 ### Build Tools
-- Use `wat2wasm` for compilation
+- Use `wasmtime` for compilation
 - Include optimization flags in comments
 - Document any custom build scripts or configurations
 
 ### Testing Patterns
-- Test WebAssembly modules in both browser and Node.js environments
+- Test WebAssembly modules using `wasmtime`
 - Include performance benchmarks for critical functions
 - Test edge cases for numeric operations (overflow, underflow, NaN)
 - Validate memory bounds and safety

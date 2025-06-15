@@ -1,0 +1,41 @@
+// Novo Lexer Memory Management
+// Handles memory layout and basic memory management functions
+
+component novo-lexer-memory {
+  // Memory Layout:
+  // 0-1023:      Input text buffer
+  // 1024-2047:   Filename string
+  // 2048-32767:  Token array (fixed-size token records, 16 bytes each)
+  // 32768-65535: Variable-size data (identifier strings)
+  export memory 1 as "memory"
+
+  // Memory section constants
+  export const INPUT_BUFFER_START: i32 = 0
+  export const INPUT_BUFFER_SIZE: i32 = 1024
+  export const FILENAME_START: i32 = 1024
+  export const FILENAME_SIZE: i32 = 1024
+  export const TOKEN_ARRAY_START: i32 = 2048
+  export const TOKEN_ARRAY_SIZE: i32 = 30720
+  export const VAR_DATA_START: i32 = 32768
+  export const VAR_DATA_SIZE: i32 = 32768
+
+  export singleton record lexer-state {
+    line  i32 = 1
+    col   i32 = 0
+    count i32 = 0
+  }
+
+  export func update-position(c: char) {
+    if c == '\n' {
+      lexer-state.line++
+      lexer-state.col = 0
+    } else {
+      lexer-state.col++
+    }
+  }
+
+  export func store-identifier(identifier: string) -> (ptr:i32, len:i32) {
+    // Store string at memory address and return pointer address
+    return string::store(VAR_DATA_START, identifier)
+  }
+}

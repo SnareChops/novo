@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # WAT Test Runner Script
-# Compiles and runs WebAssembly core modules using wasm-tools
+# Compiles and runs WebAssembly core modules
 
 set -e  # Exit on any error
 
@@ -12,69 +12,100 @@ SRC_DIR="$PROJECT_ROOT/src"
 TEST_DIR="$PROJECT_ROOT/tests/unit"
 BUILD_DIR="$PROJECT_ROOT/build"
 
-# Ensure build directory exists
+# Create build directory
 mkdir -p "$BUILD_DIR"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+echo "Compiling WAT modules..."
 
-echo "${YELLOW}Compiling WAT modules...${NC}"
+# Compile modules in dependency order
+echo "Compiling modules in dependency order..."
+typeset -a build_modules
+build_modules=(
+  # Memory management first
+  "lexer/memory:lexer-memory"
 
-# Compile all WAT files as core modules
-compile_module() {
-    local src="$1"
-    local out="$2"
-    echo "Compiling $(basename $src)..."
+  # Token definitions and core utilities
+  "lexer/tokens:lexer-tokens"
+  "lexer/char-utils:lexer-char-utils"
 
-    # Parse WAT to wasm
-    wasm-tools parse "$src" -o "$out" || {
-        echo "${RED}Failed to parse $(basename $src)${NC}"
-        return 1
-    }
-}
+  # Token storage must come before identifiers
+  "lexer/token-storage:lexer-token-storage"
 
-# Compile all modules in dependency order
-compile_module "$SRC_DIR/memory.wat" "$BUILD_DIR/memory.wasm"
-compile_module "$SRC_DIR/keywords.wat" "$BUILD_DIR/keywords.wasm"
-compile_module "$SRC_DIR/lexer.wat" "$BUILD_DIR/lexer.wasm"
-compile_module "$SRC_DIR/parser.wat" "$BUILD_DIR/parser.wasm"
-compile_module "$TEST_DIR/lexer_test.wat" "$BUILD_DIR/lexer_test.wasm"
-compile_module "$TEST_DIR/parser_test.wat" "$BUILD_DIR/parser_test.wasm"
+  # Keywords must come before identifiers
+  "lexer/keywords:lexer-keywords"
 
-echo "${YELLOW}Running tests...${NC}"
+  # Lexer processing modules
+  "lexer/operators:lexer-operators"
+  "lexer/identifiers:lexer-identifiers"
+  "lexer/main:lexer-main"
+
+  # AST modules
+  "ast/node-types:ast-node-types"
+  "ast/memory:ast-memory"
+  "ast/node-core:ast-node-core"
+  "ast/node-creators:ast-node-creators"
+  "ast/main:ast-main"
+)
+
+for pair in "${build_modules[@]}"; do
+  src="${pair%%:*}"
+  out="${pair##*:}"
+  echo "Compiling $src..."
+  wat2wasm --enable-all "$SRC_DIR/$src.wat" -o "$BUILD_DIR/$out.wasm" || exit 1
+done
+
+# Compile test modules
+echo "Compiling test modules..."
+for test in "$TEST_DIR"/*.wat; do
+  base=$(basename "$test" .wat)
+  echo "Compiling $base..."
+  wat2wasm --enable-all "$test" -o "$BUILD_DIR/$base.wasm" || exit 1
+done
+
+# Run tests
+echo "Running tests..."
+
+# Define preload modules in dependency order
+typeset -a preloads
+preloads=(
+  "memory=lexer-memory.wasm"
+  "lexer_memory=lexer-memory.wasm"
+  "tokens=lexer-tokens.wasm"
+  "lexer_tokens=lexer-tokens.wasm"
+  "char_utils=lexer-char-utils.wasm"
+  "lexer_char_utils=lexer-char-utils.wasm"
+  "lexer_token_storage=lexer-token-storage.wasm"
+  "keywords=lexer-keywords.wasm"
+  "lexer_keywords=lexer-keywords.wasm"
+  "lexer_operators=lexer-operators.wasm"
+  "lexer_identifiers=lexer-identifiers.wasm"
+  "novo_lexer=lexer-main.wasm"
+  "ast_node_types=ast-node-types.wasm"
+  "ast_memory=ast-memory.wasm"
+  "ast_node_core=ast-node-core.wasm"
+  "ast_node_creators=ast-node-creators.wasm"
+)
+preload_args=()
+for preload in "${preloads[@]}"; do
+  preload_args+=("--preload" "$preload")
+done
 
 cd "$BUILD_DIR"
 
-# Run lexer tests
-echo "${YELLOW}Running lexer tests...${NC}"
-wasmtime \
-    --preload memory=memory.wasm \
-    --preload keywords=keywords.wasm \
-    --preload lexer=lexer.wasm \
-    -W multi-value=y \
-    -W reference-types=y \
-    lexer_test.wasm \
-    --invoke test || {
-        echo "${RED}Lexer tests failed!${NC}"
-        exit 1
-    }
+# Sort test modules so core tests run first
+test_files=($(find . -maxdepth 1 -name '*-test.wasm' | sort))
 
-# Run parser tests
-echo "${YELLOW}Running parser tests...${NC}"
-wasmtime \
-    --preload memory=memory.wasm \
-    --preload keywords=keywords.wasm \
-    --preload lexer=lexer.wasm \
-    --preload parser=parser.wasm \
-    -W multi-value=y \
-    -W reference-types=y \
-    parser_test.wasm \
-    --invoke test || {
-        echo "${RED}Parser tests failed!${NC}"
-        exit 1
-    }
+# Run tests in order
+for test in "${test_files[@]}"; do
+  if [[ -f "$test" ]]; then
+    test_name=$(basename "$test" .wasm)
+    echo "Running $test_name..."
+    wasmtime run \
+      --wasm all-proposals=y \
+      --dir . \
+      "${preload_args[@]}" \
+      "$test"
+  fi
+done
 
-echo "${GREEN}All tests passed successfully!${NC}"
+echo "All tests completed"

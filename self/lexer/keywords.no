@@ -1,0 +1,10 @@
+// Novo Lexer Keyword Recognition
+// Handles keyword matching and classification
+
+component novo-lexer-keywords {
+  import memory "memory"
+
+  import "tokens".{TOKEN_IDENTIFIER}
+
+
+}
