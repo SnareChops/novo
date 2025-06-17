@@ -5,6 +5,7 @@
   ;; Import all required modules and their functions
   (import "memory" "memory" (memory 1))
   (import "memory" "update_position" (func $update_position (param i32)))
+  (import "memory" "token_count" (global $token_count (mut i32)))
 
   (import "tokens" "TOKEN_ERROR" (global $TOKEN_ERROR i32))
   (import "tokens" "TOKEN_IDENTIFIER" (global $TOKEN_IDENTIFIER i32))
@@ -258,6 +259,58 @@
     (return (local.get $token_idx) (local.get $next_pos))
   )
 
-  ;; Export main lexer function
+  ;; Scan entire text and tokenize it
+  ;; @param text_start i32 - Start position in memory of text to scan
+  ;; @param text_len i32 - Length of text to scan
+  ;; @returns i32 - 1 if successful, 0 if failed
+  (func $scan_text (param $text_start i32) (param $text_len i32) (result i32)
+    (local $pos i32)
+    (local $end_pos i32)
+    (local $token_idx i32)
+    (local $next_pos i32)
+    (local $result i32)
+
+    ;; Initialize position variables
+    (local.set $pos (local.get $text_start))
+    (local.set $end_pos (i32.add (local.get $text_start) (local.get $text_len)))
+
+    ;; Reset token count at start of scanning
+    (global.set $token_count (i32.const 0))
+
+    ;; Process all characters in the text
+    (loop $scan_loop
+      ;; Check if we've reached end of text
+      (if (i32.ge_u (local.get $pos) (local.get $end_pos))
+        (then
+          ;; Add EOF token and return success
+          (drop (call $store_token (global.get $TOKEN_EOF) (local.get $pos)))
+          (return (i32.const 1))
+        )
+      )
+
+      ;; Get next token
+      (call $next_token (local.get $pos))
+      (local.set $next_pos)
+      (local.set $token_idx)
+
+      ;; Check for error token
+      (if (i32.eq (local.get $token_idx) (i32.const -1))
+        (then
+          ;; Error occurred, return failure
+          (return (i32.const 0))
+        )
+      )
+
+      ;; Move to next position
+      (local.set $pos (local.get $next_pos))
+      (br $scan_loop)
+    )
+
+    ;; Should never reach here
+    (i32.const 0)
+  )
+
+  ;; Export main lexer functions
   (export "next_token" (func $next_token))
+  (export "scan_text" (func $scan_text))
 )

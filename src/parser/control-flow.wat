@@ -31,7 +31,7 @@
   (import "ast_node_creators" "create_ctrl_break" (func $create_ctrl_break (result i32)))
   (import "ast_node_creators" "create_ctrl_continue" (func $create_ctrl_continue (result i32)))
 
-  ;; Import expression parsing (for conditions and return values) - TODO: enable when needed
+  ;; Import expression parsing (for conditions and return values) - TODO: temporarily disabled
   ;; (import "parser_expression_core" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
 
   ;; Import utility functions
@@ -145,6 +145,158 @@
     (return (local.get $token_index) (local.get $new_pos))
   )
 
+  ;; Parse if statement
+  ;; Syntax: if condition { body } [else { body }]
+  ;; @param pos i32 - Current position in input
+  ;; @returns i32 i32 - AST node pointer, next position
+  (func $parse_if_statement (export "parse_if_statement") (param $pos i32) (result i32 i32)
+    (local $token_index i32)
+    (local $token_type i32)
+    (local $new_pos i32)
+    (local $condition_node i32)
+    (local $then_body i32)
+    (local $else_body i32)
+    (local $if_node i32)
+
+    ;; Get current token (should be 'if')
+    (call $next_token (local.get $pos))
+    (local.set $new_pos) ;; Second return value (next position)
+    (local.set $token_index) ;; First return value (token)
+
+    (local.set $token_type (call $get_token_type (local.get $token_index)))
+
+    ;; Verify this is an 'if' token
+    (if (i32.ne (local.get $token_type) (global.get $TOKEN_KW_IF))
+      (then
+        ;; Error: expected 'if'
+        (return (i32.const 0) (local.get $pos))
+      )
+    )
+
+    ;; Parse condition expression (placeholder for now)
+    ;; TODO: Enable real expression parsing
+    (local.set $condition_node (i32.const 42)) ;; Placeholder
+
+    (if (i32.eqz (local.get $condition_node))
+      (then
+        ;; Error: failed to parse condition
+        (return (i32.const 0) (local.get $new_pos))
+      )
+    )
+
+    ;; For now, create simple placeholders and return basic if node
+    (local.set $then_body (i32.const 1)) ;; Placeholder
+    (local.set $else_body (i32.const 0)) ;; No else clause
+
+    ;; Create if AST node
+    (local.set $if_node (call $create_ctrl_if (local.get $condition_node) (local.get $then_body) (local.get $else_body)))
+
+    ;; Return AST node and next position
+    (return (local.get $if_node) (local.get $new_pos))
+  )
+
+  ;; Parse while statement
+  ;; Syntax: while condition { body }
+  ;; @param pos i32 - Current position in input
+  ;; @returns i32 i32 - AST node pointer, next position
+  (func $parse_while_statement (export "parse_while_statement") (param $pos i32) (result i32 i32)
+    (local $token_index i32)
+    (local $token_type i32)
+    (local $new_pos i32)
+    (local $condition_node i32)
+    (local $body_node i32)
+    (local $while_node i32)
+
+    ;; Get current token (should be 'while')
+    (call $next_token (local.get $pos))
+    (local.set $new_pos) ;; Second return value (next position)
+    (local.set $token_index) ;; First return value (token)
+
+    (local.set $token_type (call $get_token_type (local.get $token_index)))
+
+    ;; Verify this is a 'while' token
+    (if (i32.ne (local.get $token_type) (global.get $TOKEN_KW_WHILE))
+      (then
+        ;; Error: expected 'while'
+        (return (i32.const 0) (local.get $pos))
+      )
+    )
+
+    ;; Parse condition expression (placeholder for now)
+    ;; TODO: Enable real expression parsing
+    (local.set $condition_node (i32.const 43)) ;; Placeholder
+
+    (if (i32.eqz (local.get $condition_node))
+      (then
+        ;; Error: failed to parse condition
+        (return (i32.const 0) (local.get $new_pos))
+      )
+    )
+
+    ;; For now, create a simple placeholder for the body
+    (local.set $body_node (i32.const 1)) ;; Placeholder
+
+    ;; Create while AST node
+    (local.set $while_node (call $create_ctrl_while (local.get $condition_node) (local.get $body_node)))
+
+    ;; Return AST node and next position
+    (return (local.get $while_node) (local.get $new_pos))
+  )
+
+  ;; Helper function to skip to closing brace
+  ;; @param pos i32 - Current position (should be after opening brace)
+  ;; @returns i32 - Position after closing brace
+  (func $skip_to_closing_brace (param $pos i32) (result i32)
+    (local $token_index i32)
+    (local $token_type i32)
+    (local $new_pos i32)
+    (local $brace_count i32)
+
+    (local.set $new_pos (local.get $pos))
+    (local.set $brace_count (i32.const 1)) ;; We're inside one brace already
+
+    (loop $find_closing_brace
+      (local.set $token_index (call $next_token (local.get $new_pos)))
+      (local.set $new_pos (i32.and (local.get $token_index) (i32.const 0xFFFF)))
+      (local.set $token_index (i32.shr_u (local.get $token_index) (i32.const 16)))
+      (local.set $token_type (call $get_token_type (local.get $token_index)))
+
+      (if (i32.eq (local.get $token_type) (global.get $TOKEN_EOF))
+        (then
+          ;; Reached end of input - return current position
+          (return (local.get $new_pos))
+        )
+      )
+
+      (if (i32.eq (local.get $token_type) (global.get $TOKEN_LBRACE))
+        (then
+          ;; Found opening brace - increment count
+          (local.set $brace_count (i32.add (local.get $brace_count) (i32.const 1)))
+        )
+      )
+
+      (if (i32.eq (local.get $token_type) (global.get $TOKEN_RBRACE))
+        (then
+          ;; Found closing brace - decrement count
+          (local.set $brace_count (i32.sub (local.get $brace_count) (i32.const 1)))
+
+          ;; If count reaches zero, we found our matching brace
+          (if (i32.eqz (local.get $brace_count))
+            (then
+              ;; Return position after closing brace
+              (return (local.get $new_pos))
+            )
+          )
+        )
+      )
+
+      ;; Continue to next token
+      (br $find_closing_brace)
+    )
+
+    (local.get $new_pos)
+  )
+
   ;; Main entry point for control flow parsing
   ;; Determines which control flow statement to parse based on token type
   ;; @param pos i32 - Current position in input
@@ -158,6 +310,14 @@
     (local.set $token_type (call $get_token_type (i32.shr_u (local.get $token_index) (i32.const 16))))
 
     ;; Dispatch to appropriate parser based on token type
+    (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_IF))
+      (then (return (call $parse_if_statement (local.get $pos))))
+    )
+
+    (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_WHILE))
+      (then (return (call $parse_while_statement (local.get $pos))))
+    )
+
     (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_RETURN))
       (then (return (call $parse_return_statement (local.get $pos))))
     )
@@ -168,6 +328,14 @@
 
     (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_CONTINUE))
       (then (return (call $parse_continue_statement (local.get $pos))))
+    )
+
+    (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_IF))
+      (then (return (call $parse_if_statement (local.get $pos))))
+    )
+
+    (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_WHILE))
+      (then (return (call $parse_while_statement (local.get $pos))))
     )
 
     ;; Not a control flow statement

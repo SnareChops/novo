@@ -152,4 +152,57 @@
 
     ;; Free the node itself
     (call $free (local.get $node)))
+
+  ;; Count the number of children for a node
+  ;; @param $node i32 - Pointer to the node
+  ;; @returns i32 - Number of children
+  (func $get_child_count (export "get_child_count") (param $node i32) (result i32)
+    (local $child i32)
+    (local $count i32)
+
+    (if (i32.eqz (local.get $node))
+      (then (return (i32.const 0))))
+
+    ;; Start with first child
+    (local.set $child (call $get_first_child (local.get $node)))
+    (local.set $count (i32.const 0))
+
+    ;; Count all children by traversing sibling chain
+    (loop $count_children
+      (if (local.get $child)
+        (then
+          (local.set $count (i32.add (local.get $count) (i32.const 1)))
+          (local.set $child (call $get_next_sibling (local.get $child)))
+          (br $count_children))))
+
+    (local.get $count))
+
+  ;; Get the nth child of a node (0-indexed)
+  ;; @param $node i32 - Pointer to the node
+  ;; @param $index i32 - Index of child to get (0-based)
+  ;; @returns i32 - Pointer to child node (0 if not found)
+  (func $get_child (export "get_child") (param $node i32) (param $index i32) (result i32)
+    (local $child i32)
+    (local $current_index i32)
+
+    (if (i32.eqz (local.get $node))
+      (then (return (i32.const 0))))
+
+    ;; Start with first child
+    (local.set $child (call $get_first_child (local.get $node)))
+    (local.set $current_index (i32.const 0))
+
+    ;; Traverse to the nth child
+    (loop $find_child
+      (if (local.get $child)
+        (then
+          (if (i32.eq (local.get $current_index) (local.get $index))
+            (then (return (local.get $child))))
+
+          (local.set $current_index (i32.add (local.get $current_index) (i32.const 1)))
+          (local.set $child (call $get_next_sibling (local.get $child)))
+          (br $find_child))))
+
+    ;; Not found
+    (i32.const 0))
 )
