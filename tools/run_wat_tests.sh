@@ -58,12 +58,10 @@ build_modules=(
   "ast/node-creators:ast-node-creators"
   "ast/main:ast-main"
 
-  # Parser modules
+  # Parser modules (dependencies first)
   "parser/precedence:parser-precedence"
   "parser/utils:parser-utils"
   "parser/expression-core:parser-expression-core"
-  "parser/function-calls:parser-function-calls"
-  "parser/meta-functions:parser-meta-functions"
   "parser/main:parser-main"
 )
 
@@ -116,8 +114,6 @@ preloads=(
   "parser_utils=parser-utils.wasm"
   "parser_main=parser-main.wasm"
   "parser_expression_core=parser-expression-core.wasm"
-  "parser_function_calls=parser-function-calls.wasm"
-  "parser_meta_functions=parser-meta-functions.wasm"
 )
 preload_args=()
 for preload in "${preloads[@]}"; do
