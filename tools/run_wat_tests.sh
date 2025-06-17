@@ -61,6 +61,7 @@ build_modules=(
   # Parser modules (dependencies first)
   "parser/precedence:parser-precedence"
   "parser/utils:parser-utils"
+  "parser/types:parser-types"
   "parser/expression-core:parser-expression-core"
   "parser/main:parser-main"
 )
@@ -112,6 +113,7 @@ preloads=(
   "ast_node_creators=ast-node-creators.wasm"
   "parser_precedence=parser-precedence.wasm"
   "parser_utils=parser-utils.wasm"
+  "parser_types=parser-types.wasm"
   "parser_main=parser-main.wasm"
   "parser_expression_core=parser-expression-core.wasm"
 )

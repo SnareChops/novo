@@ -12,6 +12,10 @@
 
   ;; Import node type constants
   (import "ast_node_types" "TYPE_PRIMITIVE" (global $TYPE_PRIMITIVE i32))
+  (import "ast_node_types" "TYPE_LIST" (global $TYPE_LIST i32))
+  (import "ast_node_types" "TYPE_OPTION" (global $TYPE_OPTION i32))
+  (import "ast_node_types" "TYPE_RESULT" (global $TYPE_RESULT i32))
+  (import "ast_node_types" "TYPE_TUPLE" (global $TYPE_TUPLE i32))
   (import "ast_node_types" "EXPR_IDENTIFIER" (global $EXPR_IDENTIFIER i32))
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
   (import "ast_node_types" "NODE_DATA_OFFSET" (global $NODE_DATA_OFFSET i32))
@@ -345,6 +349,112 @@
         ;; Arguments will be added as additional children by caller
       )
     )
+
+    (local.get $node)
+  )
+
+  ;; Create a list type node (list<T>)
+  ;; @param $element_type i32 - AST node pointer to element type
+  ;; @returns i32 - Pointer to new node
+  (func $create_type_list (export "create_type_list") (param $element_type i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with 4 bytes for element_type pointer
+    (local.set $node
+      (call $create_node
+        (global.get $TYPE_LIST)
+        (i32.const 4)))
+
+    ;; If allocation successful, store element_type pointer
+    (if (local.get $node)
+      (then
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $element_type))))
+
+    (local.get $node)
+  )
+
+  ;; Create an option type node (option<T>)
+  ;; @param $inner_type i32 - AST node pointer to inner type
+  ;; @returns i32 - Pointer to new node
+  (func $create_type_option (export "create_type_option") (param $inner_type i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with 4 bytes for inner_type pointer
+    (local.set $node
+      (call $create_node
+        (global.get $TYPE_OPTION)
+        (i32.const 4)))
+
+    ;; If allocation successful, store inner_type pointer
+    (if (local.get $node)
+      (then
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $inner_type))))
+
+    (local.get $node)
+  )
+
+  ;; Create a result type node (result<T,E>)
+  ;; @param $ok_type i32 - AST node pointer to success type
+  ;; @param $err_type i32 - AST node pointer to error type
+  ;; @returns i32 - Pointer to new node
+  (func $create_type_result (export "create_type_result") (param $ok_type i32) (param $err_type i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with 8 bytes for both type pointers
+    (local.set $node
+      (call $create_node
+        (global.get $TYPE_RESULT)
+        (i32.const 8)))
+
+    ;; If allocation successful, store both type pointers
+    (if (local.get $node)
+      (then
+        ;; Store ok_type pointer
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $ok_type))
+        ;; Store err_type pointer
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (i32.add
+              (global.get $NODE_DATA_OFFSET)
+              (i32.const 4)))
+          (local.get $err_type))))
+
+    (local.get $node)
+  )
+
+  ;; Create a tuple type node (tuple<T1, T2, ...>)
+  ;; @param $element_count i32 - Number of tuple elements
+  ;; @returns i32 - Pointer to new node (elements added via add_child)
+  (func $create_type_tuple (export "create_type_tuple") (param $element_count i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with 4 bytes for element_count
+    (local.set $node
+      (call $create_node
+        (global.get $TYPE_TUPLE)
+        (i32.const 4)))
+
+    ;; If allocation successful, store element_count
+    (if (local.get $node)
+      (then
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $element_count))))
 
     (local.get $node)
   )
