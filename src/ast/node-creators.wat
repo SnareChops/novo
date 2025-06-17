@@ -39,6 +39,21 @@
   (import "ast_node_types" "CTRL_BREAK" (global $CTRL_BREAK i32))
   (import "ast_node_types" "CTRL_CONTINUE" (global $CTRL_CONTINUE i32))
   (import "ast_node_types" "CTRL_RETURN" (global $CTRL_RETURN i32))
+  (import "ast_node_types" "CTRL_MATCH" (global $CTRL_MATCH i32))
+  (import "ast_node_types" "CTRL_MATCH_ARM" (global $CTRL_MATCH_ARM i32))
+
+  ;; Import pattern matching node types
+  (import "ast_node_types" "PAT_LITERAL" (global $PAT_LITERAL i32))
+  (import "ast_node_types" "PAT_VARIABLE" (global $PAT_VARIABLE i32))
+  (import "ast_node_types" "PAT_TUPLE" (global $PAT_TUPLE i32))
+  (import "ast_node_types" "PAT_RECORD" (global $PAT_RECORD i32))
+  (import "ast_node_types" "PAT_VARIANT" (global $PAT_VARIANT i32))
+  (import "ast_node_types" "PAT_OPTION_SOME" (global $PAT_OPTION_SOME i32))
+  (import "ast_node_types" "PAT_OPTION_NONE" (global $PAT_OPTION_NONE i32))
+  (import "ast_node_types" "PAT_RESULT_OK" (global $PAT_RESULT_OK i32))
+  (import "ast_node_types" "PAT_RESULT_ERR" (global $PAT_RESULT_ERR i32))
+  (import "ast_node_types" "PAT_LIST" (global $PAT_LIST i32))
+  (import "ast_node_types" "PAT_WILDCARD" (global $PAT_WILDCARD i32))
 
   ;; Create a primitive type node
   ;; @param $type_id i32 - Primitive type identifier (0=i32, 1=i64, 2=f32, 3=f64, 4=bool, 5=string)
@@ -566,5 +581,160 @@
   (func $create_ctrl_continue (export "create_ctrl_continue") (result i32)
     ;; Continue statement has no additional data
     (call $create_node (global.get $CTRL_CONTINUE) (i32.const 0))
+  )
+
+  ;; Pattern Matching Node Creators
+
+  ;; Create match statement node
+  ;; @param $expr_node i32 - Expression to match against
+  ;; @returns i32 - Pointer to new node
+  (func $create_match_node (export "create_match_node") (param $expr_node i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 4 bytes for expression pointer
+    (local.set $node (call $create_node (global.get $CTRL_MATCH) (i32.const 4)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store expression node pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $expr_node))))
+
+    (local.get $node)
+  )
+
+  ;; Create match arm node
+  ;; @param $pattern_node i32 - Pattern node
+  ;; @param $body_node i32 - Body expression node
+  ;; @returns i32 - Pointer to new node
+  (func $create_match_arm_node (export "create_match_arm_node") (param $pattern_node i32) (param $body_node i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 8 bytes for pattern and body pointers
+    (local.set $node (call $create_node (global.get $CTRL_MATCH_ARM) (i32.const 8)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store pattern node pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $pattern_node))
+        ;; Store body node pointer
+        (i32.store
+          (i32.add (local.get $node) (i32.add (global.get $NODE_DATA_OFFSET) (i32.const 4)))
+          (local.get $body_node))))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern literal node
+  ;; @param $pattern_type i32 - Pattern type constant
+  ;; @param $token_pos i32 - Position of literal token
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_literal_node (export "create_pattern_literal_node") (param $pattern_type i32) (param $token_pos i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 4 bytes for token position
+    (local.set $node (call $create_node (local.get $pattern_type) (i32.const 4)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store token position
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $token_pos))))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern variable node
+  ;; @param $token_pos i32 - Position of identifier token
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_variable_node (export "create_pattern_variable_node") (param $token_pos i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 4 bytes for token position
+    (local.set $node (call $create_node (global.get $PAT_VARIABLE) (i32.const 4)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store token position
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $token_pos))))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern wildcard node
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_wildcard_node (export "create_pattern_wildcard_node") (result i32)
+    ;; Wildcard pattern has no additional data
+    (call $create_node (global.get $PAT_WILDCARD) (i32.const 0))
+  )
+
+  ;; Create pattern option some node
+  ;; @param $inner_pattern i32 - Inner pattern node
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_option_some_node (export "create_pattern_option_some_node") (param $inner_pattern i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 4 bytes for inner pattern pointer
+    (local.set $node (call $create_node (global.get $PAT_OPTION_SOME) (i32.const 4)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store inner pattern pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $inner_pattern))))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern option none node
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_option_none_node (export "create_pattern_option_none_node") (result i32)
+    ;; None pattern has no additional data
+    (call $create_node (global.get $PAT_OPTION_NONE) (i32.const 0))
+  )
+
+  ;; Create pattern result ok node
+  ;; @param $inner_pattern i32 - Inner pattern node
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_result_ok_node (export "create_pattern_result_ok_node") (param $inner_pattern i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 4 bytes for inner pattern pointer
+    (local.set $node (call $create_node (global.get $PAT_RESULT_OK) (i32.const 4)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store inner pattern pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $inner_pattern))))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern result error node
+  ;; @param $inner_pattern i32 - Inner pattern node
+  ;; @returns i32 - Pointer to new node
+  (func $create_pattern_result_err_node (export "create_pattern_result_err_node") (param $inner_pattern i32) (result i32)
+    (local $node i32)
+
+    ;; Create node with 4 bytes for inner pattern pointer
+    (local.set $node (call $create_node (global.get $PAT_RESULT_ERR) (i32.const 4)))
+    
+    (if (local.get $node)
+      (then
+        ;; Store inner pattern pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $inner_pattern))))
+
+    (local.get $node)
   )
 )

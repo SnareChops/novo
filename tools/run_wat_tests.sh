@@ -64,6 +64,7 @@ build_modules=(
   "parser/types:parser-types"
   "parser/functions:parser-functions"
   "parser/control-flow:parser-control-flow"
+  "parser/patterns:parser-patterns"
   "parser/expression-core:parser-expression-core"
   "parser/main:parser-main"
 )
