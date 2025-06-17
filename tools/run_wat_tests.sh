@@ -63,6 +63,7 @@ build_modules=(
   "parser/utils:parser-utils"
   "parser/types:parser-types"
   "parser/functions:parser-functions"
+  "parser/control-flow:parser-control-flow"
   "parser/expression-core:parser-expression-core"
   "parser/main:parser-main"
 )
@@ -116,6 +117,7 @@ preloads=(
   "parser_utils=parser-utils.wasm"
   "parser_types=parser-types.wasm"
   "parser_functions=parser-functions.wasm"
+  "parser_control_flow=parser-control-flow.wasm"
   "parser_main=parser-main.wasm"
   "parser_expression_core=parser-expression-core.wasm"
 )

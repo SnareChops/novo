@@ -1,0 +1,257 @@
+;; Extended Control Flow Parser Tests
+;; Tests for nested control flow, complex conditions, and edge cases
+
+(module $control_flow_extended_test
+  ;; Import necessary modules
+  (import "lexer_memory" "memory" (memory 1))
+  (import "novo_lexer" "scan_text" (func $scan_text (param i32 i32) (result i32)))
+  (import "parser_control_flow" "parse_if_statement" (func $parse_if_statement (param i32) (result i32 i32)))
+  (import "parser_control_flow" "parse_while_statement" (func $parse_while_statement (param i32) (result i32 i32)))
+  (import "parser_control_flow" "parse_control_flow" (func $parse_control_flow (param i32) (result i32 i32)))
+
+  ;; Import AST node types for validation
+  (import "ast_node_types" "CTRL_IF" (global $CTRL_IF i32))
+  (import "ast_node_types" "CTRL_WHILE" (global $CTRL_WHILE i32))
+  (import "ast_node_types" "CTRL_RETURN" (global $CTRL_RETURN i32))
+
+  ;; Import AST node core functions
+  (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
+  (import "ast_node_core" "get_child_count" (func $get_child_count (param i32) (result i32)))
+  (import "ast_node_core" "get_child" (func $get_child (param i32 i32) (result i32)))
+
+  ;; Memory locations for test strings
+  (global $TEST_STRING_AREA i32 (i32.const 8192))
+
+  ;; Test counter
+  (global $test_count (mut i32) (i32.const 0))
+  (global $test_passed (mut i32) (i32.const 0))
+
+  ;; Helper function to write string to memory
+  (func $write_string (param $dest i32) (param $str_offset i32) (param $length i32)
+    (local $i i32)
+    (local.set $i (i32.const 0))
+    (loop $copy_loop
+      (if (i32.lt_u (local.get $i) (local.get $length))
+        (then
+          (i32.store8
+            (i32.add (local.get $dest) (local.get $i))
+            (i32.load8_u (i32.add (local.get $str_offset) (local.get $i)))
+          )
+          (local.set $i (i32.add (local.get $i) (i32.const 1)))
+          (br $copy_loop)
+        )
+      )
+    )
+  )
+
+  ;; Helper function to run a test
+  (func $run_test (param $test_name_start i32) (param $test_name_len i32) (param $code_start i32) (param $code_len i32) (param $expected_node_type i32) (result i32)
+    (local $result i32)
+    (local $node_ptr i32)
+    (local $next_pos i32)
+    (local $actual_node_type i32)
+
+    ;; Increment test counter
+    (global.set $test_count (i32.add (global.get $test_count) (i32.const 1)))
+
+    ;; Copy test code to memory
+    (call $write_string (global.get $TEST_STRING_AREA) (local.get $code_start) (local.get $code_len))
+
+    ;; Scan the text
+    (local.set $result (call $scan_text (global.get $TEST_STRING_AREA) (local.get $code_len)))
+    (if (i32.eqz (local.get $result))
+      (then
+        ;; Scanning failed
+        (return (i32.const 0))
+      )
+    )
+
+    ;; Parse control flow
+    (local.set $result (call $parse_control_flow (i32.const 0)))
+    (local.set $node_ptr (i32.shr_u (local.get $result) (i32.const 16)))
+    (local.set $next_pos (i32.and (local.get $result) (i32.const 0xFFFF)))
+
+    ;; Check if parsing succeeded
+    (if (i32.eqz (local.get $node_ptr))
+      (then
+        ;; Parsing failed
+        (return (i32.const 0))
+      )
+    )
+
+    ;; Validate node type
+    (local.set $actual_node_type (call $get_node_type (local.get $node_ptr)))
+    (if (i32.eq (local.get $actual_node_type) (local.get $expected_node_type))
+      (then
+        ;; Test passed
+        (global.set $test_passed (i32.add (global.get $test_passed) (i32.const 1)))
+        (return (i32.const 1))
+      )
+      (else
+        ;; Test failed
+        (return (i32.const 0))
+      )
+    )
+  )
+
+  ;; Test that validates structure of parsed if-else statement
+  (func $run_structure_test (param $code_start i32) (param $code_len i32) (param $expected_child_count i32) (result i32)
+    (local $result i32)
+    (local $node_ptr i32)
+    (local $next_pos i32)
+    (local $actual_child_count i32)
+
+    ;; Increment test counter
+    (global.set $test_count (i32.add (global.get $test_count) (i32.const 1)))
+
+    ;; Copy test code to memory
+    (call $write_string (global.get $TEST_STRING_AREA) (local.get $code_start) (local.get $code_len))
+
+    ;; Scan the text
+    (local.set $result (call $scan_text (global.get $TEST_STRING_AREA) (local.get $code_len)))
+    (if (i32.eqz (local.get $result))
+      (then
+        ;; Scanning failed
+        (return (i32.const 0))
+      )
+    )
+
+    ;; Parse control flow
+    (local.set $result (call $parse_control_flow (i32.const 0)))
+    (local.set $node_ptr (i32.shr_u (local.get $result) (i32.const 16)))
+    (local.set $next_pos (i32.and (local.get $result) (i32.const 0xFFFF)))
+
+    ;; Check if parsing succeeded
+    (if (i32.eqz (local.get $node_ptr))
+      (then
+        ;; Parsing failed
+        (return (i32.const 0))
+      )
+    )
+
+    ;; Check child count
+    (local.set $actual_child_count (call $get_child_count (local.get $node_ptr)))
+    (if (i32.eq (local.get $actual_child_count) (local.get $expected_child_count))
+      (then
+        ;; Test passed
+        (global.set $test_passed (i32.add (global.get $test_passed) (i32.const 1)))
+        (return (i32.const 1))
+      )
+      (else
+        ;; Test failed
+        (return (i32.const 0))
+      )
+    )
+  )
+
+  ;; Test data strings (embedded in the module)
+  ;; Complex if with binary expression condition
+  (data (i32.const 16384) "if (x > 5 && y < 10) { return x + y }")
+
+  ;; Nested if statements
+  (data (i32.const 16423) "if (a) { if (b) { return 1 } }")
+
+  ;; While with complex condition
+  (data (i32.const 16455) "while (x > 0 && y < max) { x = x - 1 }")
+
+  ;; If-else-if chain (simulated with nested if-else)
+  (data (i32.const 16494) "if (x == 1) { return a } else { if (x == 2) { return b } }")
+
+  ;; While with break and continue
+  (data (i32.const 16553) "while (true) { if (done) { break } else { continue } }")
+
+  ;; Complex return with function call
+  (data (i32.const 16608) "return calculate-sum(a, b, c)")
+
+  ;; Test complex if condition
+  (func $test_complex_if_condition (export "test_complex_if_condition") (result i32)
+    (call $run_test
+      (i32.const 0) (i32.const 0)  ;; Test name (unused)
+      (i32.const 16384) (i32.const 38)  ;; "if (x > 5 && y < 10) { return x + y }"
+      (global.get $CTRL_IF)  ;; Expected node type
+    )
+  )
+
+  ;; Test nested if statements
+  (func $test_nested_if (export "test_nested_if") (result i32)
+    (call $run_test
+      (i32.const 0) (i32.const 0)  ;; Test name (unused)
+      (i32.const 16423) (i32.const 31)  ;; "if (a) { if (b) { return 1 } }"
+      (global.get $CTRL_IF)  ;; Expected node type
+    )
+  )
+
+  ;; Test while with complex condition
+  (func $test_complex_while_condition (export "test_complex_while_condition") (result i32)
+    (call $run_test
+      (i32.const 0) (i32.const 0)  ;; Test name (unused)
+      (i32.const 16455) (i32.const 38)  ;; "while (x > 0 && y < max) { x = x - 1 }"
+      (global.get $CTRL_WHILE)  ;; Expected node type
+    )
+  )
+
+  ;; Test if-else chain
+  (func $test_if_else_chain (export "test_if_else_chain") (result i32)
+    (call $run_test
+      (i32.const 0) (i32.const 0)  ;; Test name (unused)
+      (i32.const 16494) (i32.const 58)  ;; "if (x == 1) { return a } else { if (x == 2) { return b } }"
+      (global.get $CTRL_IF)  ;; Expected node type
+    )
+  )
+
+  ;; Test while with break/continue
+  (func $test_while_with_break_continue (export "test_while_with_break_continue") (result i32)
+    (call $run_test
+      (i32.const 0) (i32.const 0)  ;; Test name (unused)
+      (i32.const 16553) (i32.const 54)  ;; "while (true) { if (done) { break } else { continue } }"
+      (global.get $CTRL_WHILE)  ;; Expected node type
+    )
+  )
+
+  ;; Test return with function call
+  (func $test_return_function_call (export "test_return_function_call") (result i32)
+    (call $run_test
+      (i32.const 0) (i32.const 0)  ;; Test name (unused)
+      (i32.const 16608) (i32.const 29)  ;; "return calculate-sum(a, b, c)"
+      (global.get $CTRL_RETURN)  ;; Expected node type
+    )
+  )
+
+  ;; Test if-else structure (should have 3 children: condition, then-block, else-block)
+  (func $test_if_else_structure (export "test_if_else_structure") (result i32)
+    (call $run_structure_test
+      (i32.const 16494) (i32.const 58)  ;; "if (x == 1) { return a } else { if (x == 2) { return b } }"
+      (i32.const 3)  ;; Expected child count: condition, then-block, else-block
+    )
+  )
+
+  ;; Main test runner
+  (func $run_all_tests (export "run_all_tests") (result i32)
+    (local $result i32)
+
+    ;; Reset counters
+    (global.set $test_count (i32.const 0))
+    (global.set $test_passed (i32.const 0))
+
+    ;; Run all tests
+    (local.set $result (call $test_complex_if_condition))
+    (local.set $result (call $test_nested_if))
+    (local.set $result (call $test_complex_while_condition))
+    (local.set $result (call $test_if_else_chain))
+    (local.set $result (call $test_while_with_break_continue))
+    (local.set $result (call $test_return_function_call))
+    (local.set $result (call $test_if_else_structure))
+
+    ;; Return 1 if all tests passed, 0 otherwise
+    (i32.eq (global.get $test_count) (global.get $test_passed))
+  )
+
+  ;; Get test results
+  (func $get_test_count (export "get_test_count") (result i32)
+    (global.get $test_count)
+  )
+
+  (func $get_test_passed (export "get_test_passed") (result i32)
+    (global.get $test_passed)
+  )
+)

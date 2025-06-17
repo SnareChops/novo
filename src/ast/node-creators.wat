@@ -33,6 +33,13 @@
   (import "ast_node_types" "EXPR_TRADITIONAL_CALL" (global $EXPR_TRADITIONAL_CALL i32))
   (import "ast_node_types" "EXPR_META_CALL" (global $EXPR_META_CALL i32))
 
+  ;; Import control flow node types
+  (import "ast_node_types" "CTRL_IF" (global $CTRL_IF i32))
+  (import "ast_node_types" "CTRL_WHILE" (global $CTRL_WHILE i32))
+  (import "ast_node_types" "CTRL_BREAK" (global $CTRL_BREAK i32))
+  (import "ast_node_types" "CTRL_CONTINUE" (global $CTRL_CONTINUE i32))
+  (import "ast_node_types" "CTRL_RETURN" (global $CTRL_RETURN i32))
+
   ;; Create a primitive type node
   ;; @param $type_id i32 - Primitive type identifier (0=i32, 1=i64, 2=f32, 3=f64, 4=bool, 5=string)
   ;; @returns i32 - Pointer to new node
@@ -457,5 +464,107 @@
           (local.get $element_count))))
 
     (local.get $node)
+  )
+
+  ;; ===== CONTROL FLOW NODE CREATORS =====
+
+  ;; Create if statement node
+  ;; @param condition i32 - Pointer to condition expression
+  ;; @param then_block i32 - Pointer to then block
+  ;; @param else_block i32 - Pointer to else block (or 0 if no else)
+  ;; @returns i32 - Pointer to new node
+  (func $create_ctrl_if (export "create_ctrl_if") (param $condition i32) (param $then_block i32) (param $else_block i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with space for 3 pointers (condition, then, else)
+    (local.set $node
+      (call $create_node
+        (global.get $CTRL_IF)
+        (i32.const 12))) ;; 3 * 4 bytes
+
+    ;; If allocation successful, store the pointers
+    (if (local.get $node)
+      (then
+        ;; Store condition pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $condition))
+
+        ;; Store then block pointer
+        (i32.store
+          (i32.add (local.get $node) (i32.add (global.get $NODE_DATA_OFFSET) (i32.const 4)))
+          (local.get $then_block))
+
+        ;; Store else block pointer (may be 0)
+        (i32.store
+          (i32.add (local.get $node) (i32.add (global.get $NODE_DATA_OFFSET) (i32.const 8)))
+          (local.get $else_block))))
+
+    (local.get $node)
+  )
+
+  ;; Create while loop node
+  ;; @param condition i32 - Pointer to condition expression
+  ;; @param body i32 - Pointer to loop body
+  ;; @returns i32 - Pointer to new node
+  (func $create_ctrl_while (export "create_ctrl_while") (param $condition i32) (param $body i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with space for 2 pointers (condition, body)
+    (local.set $node
+      (call $create_node
+        (global.get $CTRL_WHILE)
+        (i32.const 8))) ;; 2 * 4 bytes
+
+    ;; If allocation successful, store the pointers
+    (if (local.get $node)
+      (then
+        ;; Store condition pointer
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $condition))
+
+        ;; Store body pointer
+        (i32.store
+          (i32.add (local.get $node) (i32.add (global.get $NODE_DATA_OFFSET) (i32.const 4)))
+          (local.get $body))))
+
+    (local.get $node)
+  )
+
+  ;; Create return statement node
+  ;; @param value i32 - Pointer to return value expression (or 0 for no value)
+  ;; @returns i32 - Pointer to new node
+  (func $create_ctrl_return (export "create_ctrl_return") (param $value i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with space for 1 pointer (value)
+    (local.set $node
+      (call $create_node
+        (global.get $CTRL_RETURN)
+        (i32.const 4))) ;; 1 * 4 bytes
+
+    ;; If allocation successful, store the value pointer
+    (if (local.get $node)
+      (then
+        (i32.store
+          (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
+          (local.get $value))))
+
+    (local.get $node)
+  )
+
+  ;; Create break statement node
+  ;; @returns i32 - Pointer to new node
+  (func $create_ctrl_break (export "create_ctrl_break") (result i32)
+    ;; Break statement has no additional data
+    (call $create_node (global.get $CTRL_BREAK) (i32.const 0))
+  )
+
+  ;; Create continue statement node
+  ;; @returns i32 - Pointer to new node
+  (func $create_ctrl_continue (export "create_ctrl_continue") (result i32)
+    ;; Continue statement has no additional data
+    (call $create_node (global.get $CTRL_CONTINUE) (i32.const 0))
   )
 )
