@@ -28,7 +28,7 @@ component novo-lexer-char-utils {
     return c == '+' || c == '-' || c == '*' || c == '/' || c == '%'
   }
 
-  export func is-valid-word(start: i32, end: i32) -> bool {
+  export func is-valid-word(word: string) -> bool {
     // Can't be empty
     if end <= start return false
 

@@ -70,9 +70,16 @@
   (global $TOKEN_DIVIDE i32 (i32.const 52))      ;; /
   (global $TOKEN_MODULO i32 (i32.const 53))      ;; %
 
+  ;; Literals
+  (global $TOKEN_NUMBER_LITERAL i32 (i32.const 54))  ;; 42, 3.14, etc.
+  (global $TOKEN_STRING_LITERAL i32 (i32.const 55))  ;; "hello world"
+
+  ;; Punctuation
+  (global $TOKEN_COMMA i32 (i32.const 56))          ;; ,
+
   ;; WAT-style Function Syntax
-  (global $TOKEN_LPAREN i32 (i32.const 54))      ;; (
-  (global $TOKEN_RPAREN i32 (i32.const 55))      ;; )
+  (global $TOKEN_LPAREN i32 (i32.const 57))      ;; (
+  (global $TOKEN_RPAREN i32 (i32.const 58))      ;; )
 
   ;; Export all token constants for use by other modules
   (export "TOKEN_ERROR" (global $TOKEN_ERROR))
@@ -141,6 +148,15 @@
   (export "TOKEN_MULTIPLY" (global $TOKEN_MULTIPLY))
   (export "TOKEN_DIVIDE" (global $TOKEN_DIVIDE))
   (export "TOKEN_MODULO" (global $TOKEN_MODULO))
+
+  ;; Literal tokens
+  (export "TOKEN_NUMBER_LITERAL" (global $TOKEN_NUMBER_LITERAL))
+  (export "TOKEN_STRING_LITERAL" (global $TOKEN_STRING_LITERAL))
+
+  ;; Punctuation tokens
+  (export "TOKEN_COMMA" (global $TOKEN_COMMA))
+
+  ;; Parenthesis tokens
   (export "TOKEN_LPAREN" (global $TOKEN_LPAREN))
   (export "TOKEN_RPAREN" (global $TOKEN_RPAREN))
 )

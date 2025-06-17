@@ -8,6 +8,7 @@
 
   (import "tokens" "TOKEN_ERROR" (global $TOKEN_ERROR i32))
   (import "tokens" "TOKEN_IDENTIFIER" (global $TOKEN_IDENTIFIER i32))
+  (import "tokens" "TOKEN_NUMBER_LITERAL" (global $TOKEN_NUMBER_LITERAL i32))
   (import "tokens" "TOKEN_WHITESPACE" (global $TOKEN_WHITESPACE i32))
   (import "tokens" "TOKEN_EOF" (global $TOKEN_EOF i32))
   (import "tokens" "TOKEN_ARROW" (global $TOKEN_ARROW i32))
@@ -16,6 +17,7 @@
 
   (import "char_utils" "is_whitespace" (func $is_whitespace (param i32) (result i32)))
   (import "char_utils" "is_letter" (func $is_letter (param i32) (result i32)))
+  (import "char_utils" "is_digit" (func $is_digit (param i32) (result i32)))
   (import "char_utils" "is_operator_char" (func $is_operator_char (param i32) (result i32)))
   (import "char_utils" "skip_whitespace" (func $skip_whitespace (param i32) (result i32)))
 
@@ -28,6 +30,30 @@
   (import "lexer_identifiers" "scan_identifier" (func $scan_identifier (param i32) (result i32 i32)))
   (import "lexer_token_storage" "store_token" (func $store_token (param i32 i32) (result i32)))
   (import "memory" "store_identifier" (func $store_identifier (param i32 i32) (result i32)))
+
+  ;; Scan a number literal (integer for now)
+  ;; @param pos i32 - Starting position
+  ;; @returns i32 - Next position after the number
+  (func $scan_number (param $pos i32) (result i32)
+    (local $current_pos i32)
+    (local $char i32)
+
+    (local.set $current_pos (local.get $pos))
+
+    ;; Skip digits
+    (loop $scan_digits
+      (local.set $char (i32.load8_u (local.get $current_pos)))
+
+      (if (call $is_digit (local.get $char))
+        (then
+          (local.set $current_pos (i32.add (local.get $current_pos) (i32.const 1)))
+          (br $scan_digits)
+        )
+      )
+    )
+
+    (local.get $current_pos)
+  )
 
   ;; Main lexer function - returns token index and next position
   (func $next_token (param $pos i32) (result i32 i32)
@@ -122,6 +148,20 @@
           (local.set $token_idx
             (call $store_token
               (global.get $TOKEN_IDENTIFIER)
+              (local.get $pos)
+            )
+          )
+          (br $token_handled)
+        )
+      )
+
+      ;; Handle number literals
+      (if (call $is_digit (local.get $char))
+        (then
+          (local.set $next_pos (call $scan_number (local.get $pos)))
+          (local.set $token_idx
+            (call $store_token
+              (global.get $TOKEN_NUMBER_LITERAL)
               (local.get $pos)
             )
           )

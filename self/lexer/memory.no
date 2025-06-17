@@ -20,9 +20,9 @@ component novo-lexer-memory {
   export const VAR_DATA_SIZE: i32 = 32768
 
   export singleton record lexer-state {
-    line  i32 = 1
-    col   i32 = 0
-    count i32 = 0
+    line: i32 = 1
+    col: i32 = 0
+    count: i32 = 0
   }
 
   export func update-position(c: char) {

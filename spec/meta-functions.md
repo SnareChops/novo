@@ -65,6 +65,49 @@ type-size := u32::size()    // Returns 4 (u32 value)
 type-name := u32::type()    // Returns "u32" (string)
 ```
 
+#### Memory Access Meta Functions
+Available on all numeric types for direct linear memory operations:
+
+- `::load(addr: u32)` → `T` - Load value from memory address
+- `::load_offset(addr: u32, offset: u32, align: u32)` → `T` - Load with offset and alignment
+- `::store(addr: u32, value: T)` - Store value to memory address
+- `::store_offset(addr: u32, value: T, offset: u32, align: u32)` - Store with offset and alignment
+
+```novo
+// Basic memory operations
+value := i32::load(64)           // Load i32 from address 64
+i32::store(64, 42)              // Store value 42 at address 64
+
+// With offset and alignment (align parameter uses log2 values)
+base_addr : u32 = 1024
+data := i64::load_offset(base_addr, 8, 3)    // offset=8, align=8 (2^3)
+i64::store_offset(base_addr, data, 8, 3)     // Store with same params
+
+// Type safety enforced
+x : f32 = 3.14
+f32::store(128, x)              // Valid: x is f32
+// i32::store(128, x)           // Error: type mismatch
+```
+
+**Memory access characteristics:**
+- **Direct WebAssembly mapping**: These operations compile directly to WASM load/store instructions
+- **Type safety**: Store operations require matching types between the meta-function and value
+- **No bounds checking**: Raw memory access with potential traps on out-of-bounds access
+- **Alignment parameter**: Uses log2 encoding (0=1-byte, 1=2-byte, 2=4-byte, 3=8-byte aligned)
+- **Programmer responsibility**: Memory alignment and bounds management is up to the developer
+- **Multi-memory support**: Works with all WebAssembly memory instances when available
+
+**Default alignment values:**
+- `i8`, `u8`, `s8`: align=0 (1-byte aligned)
+- `i16`, `u16`, `s16`: align=1 (2-byte aligned)
+- `i32`, `u32`, `s32`, `f32`: align=2 (4-byte aligned)
+- `i64`, `u64`, `s64`, `f64`: align=3 (8-byte aligned)
+
+**Atomic variants** (when supported by WebAssembly):
+- `::atomic_load(addr: u32)` → `T`
+- `::atomic_store(addr: u32, value: T)`
+- Available only for integer types that support atomic operations in WebAssembly
+
 #### String Meta Functions
 Available on `string` and `char` types:
 

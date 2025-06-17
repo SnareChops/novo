@@ -5,8 +5,8 @@
 Lists represent ordered collections of elements of the same type:
 
 ```novo
-numbers := list<u32>()
-names : list<string> = ["Alice", "Bob", "Charlie"]
+numbers := list<u32>{}
+names : list<string> = {"Alice", "Bob", "Charlie"}
 
 // List operations
 numbers.append(42)
@@ -19,12 +19,12 @@ length := names.length
 Options represent values that may or may not be present:
 
 ```novo
-maybe-value : option<string> = some("hello")
+maybe-value : option<string> = some{"hello"}
 empty-value : option<string> = none
 
 // Pattern matching with options
 message := match maybe-value {
-    some(value) => "Got: " + value
+    some{value} => "Got: " + value
     none => "No value"
 }
 ```
@@ -34,13 +34,13 @@ message := match maybe-value {
 Results represent operations that may succeed or fail:
 
 ```novo
-operation-result : result<string, error> = ok("success")
-failed-result : result<string, error> = error("something went wrong")
+operation-result : result<string, error> = ok{"success"}
+failed-result : result<string, error> = error{"something went wrong"}
 
 // Error handling through pattern matching
 processed := match operation-result {
-    ok(value) => process-success(value)
-    error(err) => handle-error(err)
+    ok{value} => process-success(value)
+    error{err} => handle-error(err)
 }
 ```
 
@@ -49,12 +49,12 @@ processed := match operation-result {
 Tuples group a fixed number of values of potentially different types:
 
 ```novo
-point : tuple<f32, f32> = (3.14, 2.71)
-person : tuple<string, u32, bool> = ("Alice", 30, true)
+point : tuple<f32, f32> = {3.14, 2.71}
+person : tuple<string, u32, bool> = {"Alice", 30, true}
 
 // Destructuring tuples
-(x, y) := point
-(name, age, active) := person
+{x, y} := point
+{name, age, active} := person
 ```
 
 ## Records
@@ -96,7 +96,7 @@ record config {
 }
 
 // Usage with defaults
-cfg := config { name: "my-app" }  // Uses all defaults except name
+cfg := config{ name: "my-app" }  // Uses all defaults except name
 ```
 
 ## Variants
@@ -105,22 +105,22 @@ Variants represent a value that can be one of several different types:
 
 ```novo
 variant message {
-    text(string)
-    image(string, u32, u32)  // path, width, height
-    audio(string, u32)       // path, duration
+    text{string}
+    image{string, u32, u32}  // path, width, height
+    audio{string, u32}       // path, duration
     empty
 }
 
 // Creating variants
-text-msg := message.text("Hello")
-image-msg := message.image("/path/to/image.jpg", 800, 600)
+text-msg := message.text{"Hello"}
+image-msg := message.image{"/path/to/image.jpg", 800, 600}
 empty-msg := message.empty
 
 // Pattern matching variants
 response := match text-msg {
-    text(content) => "Text: " + content
-    image(path, w, h) => "Image: " + path + " (" + w::string() + "x" + h::string() + ")"
-    audio(path, duration) => "Audio: " + path + " (" + duration::string() + "s)"
+    text{content} => "Text: " + content
+    image{path, w, h} => "Image: " + path + " (" + w::string() + "x" + h::string() + ")"
+    audio{path, duration} => "Audio: " + path + " (" + duration::string() + "s)"
     empty => "Empty message"
 }
 ```
@@ -250,10 +250,10 @@ type user-id = u32
 type coordinate = tuple<f32, f32>
 
 // Usage
-user-data : buffer = [72, 101, 108, 108, 111]  // "Hello" in bytes
-api-response : http-result = ok(response-data)
+user-data : buffer = {72, 101, 108, 108, 111}  // "Hello" in bytes
+api-response : http-result = ok{response-data}
 current-user : user-id = 12345
-position : coordinate = (10.5, 20.7)
+position : coordinate = {10.5, 20.7}
 ```
 
 ## Memory Layout

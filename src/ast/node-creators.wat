@@ -8,6 +8,7 @@
 
   ;; Import core node functions
   (import "ast_node_core" "create_node" (func $create_node (param i32 i32) (result i32)))
+  (import "ast_node_core" "add_child" (func $add_child (param i32 i32) (result i32)))
 
   ;; Import node type constants
   (import "ast_node_types" "TYPE_PRIMITIVE" (global $TYPE_PRIMITIVE i32))
@@ -18,6 +19,15 @@
   (import "ast_node_types" "EXPR_FLOAT_LITERAL" (global $EXPR_FLOAT_LITERAL i32))
   (import "ast_node_types" "EXPR_STRING_LITERAL" (global $EXPR_STRING_LITERAL i32))
   (import "ast_node_types" "EXPR_BOOL_LITERAL" (global $EXPR_BOOL_LITERAL i32))
+
+  ;; Import additional node types for binary operations and function calls
+  (import "ast_node_types" "EXPR_ADD" (global $EXPR_ADD i32))
+  (import "ast_node_types" "EXPR_SUB" (global $EXPR_SUB i32))
+  (import "ast_node_types" "EXPR_MUL" (global $EXPR_MUL i32))
+  (import "ast_node_types" "EXPR_DIV" (global $EXPR_DIV i32))
+  (import "ast_node_types" "EXPR_MOD" (global $EXPR_MOD i32))
+  (import "ast_node_types" "EXPR_TRADITIONAL_CALL" (global $EXPR_TRADITIONAL_CALL i32))
+  (import "ast_node_types" "EXPR_META_CALL" (global $EXPR_META_CALL i32))
 
   ;; Create a primitive type node
   ;; @param $type_id i32 - Primitive type identifier (0=i32, 1=i64, 2=f32, 3=f64, 4=bool, 5=string)
@@ -216,4 +226,126 @@
 
     ;; Return node pointer
     (local.get $node))
+
+  ;; Create binary operation expression nodes
+  ;; All binary operations store left and right operands as children
+
+  ;; Create addition expression node
+  (func $create_expr_add (export "create_expr_add") (param $left i32) (param $right i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node (no additional data, operands are children)
+    (local.set $node (call $create_node (global.get $EXPR_ADD) (i32.const 0)))
+
+    ;; Add left and right operands as children
+    (if (local.get $node)
+      (then
+        (drop (call $add_child (local.get $node) (local.get $left)))
+        (drop (call $add_child (local.get $node) (local.get $right)))
+      )
+    )
+
+    (local.get $node)
+  )
+
+  ;; Create subtraction expression node
+  (func $create_expr_sub (export "create_expr_sub") (param $left i32) (param $right i32) (result i32)
+    (local $node i32)
+
+    (local.set $node (call $create_node (global.get $EXPR_SUB) (i32.const 0)))
+
+    (if (local.get $node)
+      (then
+        (drop (call $add_child (local.get $node) (local.get $left)))
+        (drop (call $add_child (local.get $node) (local.get $right)))
+      )
+    )
+
+    (local.get $node)
+  )
+
+  ;; Create multiplication expression node
+  (func $create_expr_mul (export "create_expr_mul") (param $left i32) (param $right i32) (result i32)
+    (local $node i32)
+
+    (local.set $node (call $create_node (global.get $EXPR_MUL) (i32.const 0)))
+
+    (if (local.get $node)
+      (then
+        (drop (call $add_child (local.get $node) (local.get $left)))
+        (drop (call $add_child (local.get $node) (local.get $right)))
+      )
+    )
+
+    (local.get $node)
+  )
+
+  ;; Create division expression node
+  (func $create_expr_div (export "create_expr_div") (param $left i32) (param $right i32) (result i32)
+    (local $node i32)
+
+    (local.set $node (call $create_node (global.get $EXPR_DIV) (i32.const 0)))
+
+    (if (local.get $node)
+      (then
+        (drop (call $add_child (local.get $node) (local.get $left)))
+        (drop (call $add_child (local.get $node) (local.get $right)))
+      )
+    )
+
+    (local.get $node)
+  )
+
+  ;; Create modulo expression node
+  (func $create_expr_mod (export "create_expr_mod") (param $left i32) (param $right i32) (result i32)
+    (local $node i32)
+
+    (local.set $node (call $create_node (global.get $EXPR_MOD) (i32.const 0)))
+
+    (if (local.get $node)
+      (then
+        (drop (call $add_child (local.get $node) (local.get $left)))
+        (drop (call $add_child (local.get $node) (local.get $right)))
+      )
+    )
+
+    (local.get $node)
+  )
+
+  ;; Create traditional function call expression node
+  (func $create_expr_traditional_call (export "create_expr_traditional_call") (param $func_name i32) (param $args_count i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with space for function name reference
+    (local.set $node (call $create_node (global.get $EXPR_TRADITIONAL_CALL) (i32.const 4)))
+
+    (if (local.get $node)
+      (then
+        ;; Store function name as first child
+        (drop (call $add_child (local.get $node) (local.get $func_name)))
+        ;; Arguments will be added as additional children by caller
+      )
+    )
+
+    (local.get $node)
+  )
+
+  ;; Create meta-function call expression node
+  (func $create_expr_meta_call (export "create_expr_meta_call") (param $target i32) (param $method i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node (target and method are children)
+    (local.set $node (call $create_node (global.get $EXPR_META_CALL) (i32.const 0)))
+
+    (if (local.get $node)
+      (then
+        ;; Add target and method as children
+        (drop (call $add_child (local.get $node) (local.get $target)))
+        (drop (call $add_child (local.get $node) (local.get $method)))
+        ;; Arguments will be added as additional children by caller
+      )
+    )
+
+    (local.get $node)
+  )
 )

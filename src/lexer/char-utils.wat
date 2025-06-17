@@ -7,9 +7,15 @@
 
   ;; Utility Functions
   (func $is_letter (param $c i32) (result i32)
-    (i32.and
-      (i32.ge_s (local.get $c) (i32.const 97))  ;; >= 'a'
-      (i32.le_s (local.get $c) (i32.const 122)) ;; <= 'z'
+    (i32.or
+      (i32.and
+        (i32.ge_s (local.get $c) (i32.const 97))  ;; >= 'a'
+        (i32.le_s (local.get $c) (i32.const 122)) ;; <= 'z'
+      )
+      (i32.and
+        (i32.ge_s (local.get $c) (i32.const 65))  ;; >= 'A'
+        (i32.le_s (local.get $c) (i32.const 90))  ;; <= 'Z'
+      )
     )
   )
 
@@ -23,7 +29,11 @@
   (func $is_kebab_char (param $c i32) (result i32)
     (i32.or
       (i32.or
-        (call $is_letter (local.get $c))
+        ;; Only lowercase letters for kebab-case
+        (i32.and
+          (i32.ge_u (local.get $c) (i32.const 97))   ;; >= 'a'
+          (i32.le_u (local.get $c) (i32.const 122))  ;; <= 'z'
+        )
         (call $is_digit (local.get $c))
       )
       (i32.eq (local.get $c) (i32.const 45))    ;; '-'
@@ -33,7 +43,11 @@
   ;; Check for valid identifier rules
   (func $is_valid_identifier_start (param $c i32) (result i32)
     (i32.or
-      (call $is_letter (local.get $c))    ;; Must start with letter
+      ;; Only lowercase letters for identifier start
+      (i32.and
+        (i32.ge_u (local.get $c) (i32.const 97))   ;; >= 'a'
+        (i32.le_u (local.get $c) (i32.const 122))  ;; <= 'z'
+      )
       (i32.eq (local.get $c) (i32.const 0x25))  ;; Or % sign (0x25)
     )
   )
@@ -92,7 +106,11 @@
     )
 
     ;; Track case of first character
-    (if (i32.le_s (local.get $c) (i32.const 90)) ;; uppercase
+    (if (i32.and
+          (call $is_letter (local.get $c))
+          (i32.and
+            (i32.ge_s (local.get $c) (i32.const 65))  ;; >= 'A'
+            (i32.le_s (local.get $c) (i32.const 90)))) ;; <= 'Z'
       (then (local.set $had_uppercase (i32.const 1)))
       (else (local.set $had_lowercase (i32.const 1)))
     )
@@ -115,18 +133,27 @@
         )
 
         ;; Track case for consistency check
-        (if (i32.le_s (local.get $c) (i32.const 90)) ;; uppercase
+        (if (call $is_letter (local.get $c))
           (then
-            (if (local.get $had_lowercase)
-              (then (return (i32.const 0))) ;; Mixed case in word
+            ;; Only check case for letters, not digits
+            (if (i32.and
+                  (i32.ge_s (local.get $c) (i32.const 65))  ;; >= 'A'
+                  (i32.le_s (local.get $c) (i32.const 90))) ;; <= 'Z'
+              (then
+                ;; Uppercase letter
+                (if (local.get $had_lowercase)
+                  (then (return (i32.const 0))) ;; Mixed case in word
+                )
+                (local.set $had_uppercase (i32.const 1))
+              )
+              (else
+                ;; Lowercase letter
+                (if (local.get $had_uppercase)
+                  (then (return (i32.const 0))) ;; Mixed case in word
+                )
+                (local.set $had_lowercase (i32.const 1))
+              )
             )
-            (local.set $had_uppercase (i32.const 1))
-          )
-          (else
-            (if (local.get $had_uppercase)
-              (then (return (i32.const 0))) ;; Mixed case in word
-            )
-            (local.set $had_lowercase (i32.const 1))
           )
         )
 
@@ -145,13 +172,14 @@
     (local.set $current_pos (local.get $pos))
 
     (loop $whitespace_loop
-      (br_if $whitespace_loop
-        (call $is_whitespace
-          (i32.load8_u (local.get $current_pos))
+      ;; Continue looping while current character IS whitespace
+      (if (call $is_whitespace (i32.load8_u (local.get $current_pos)))
+        (then
+          (local.set $current_pos
+            (i32.add (local.get $current_pos) (i32.const 1))
+          )
+          (br $whitespace_loop)
         )
-      )
-      (local.set $current_pos
-        (i32.add (local.get $current_pos) (i32.const 1))
       )
     )
 

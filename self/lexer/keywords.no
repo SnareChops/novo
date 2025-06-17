@@ -6,5 +6,52 @@ component novo-lexer-keywords {
 
   import "tokens".{TOKEN_IDENTIFIER}
 
+  const keywords : list<string> = [
+    "func",
+    "inline",
+    "return",
+    "if",
+    "else",
+    "while",
+    "break",
+    "continue",
+    "match",
+    "bool",
+    "s8",
+    "s16",
+    "s32",
+    "s64",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+    "f32",
+    "f64",
+    "char",
+    "string",
+    "list",
+    "option",
+    "result",
+    "tuple",
+    "record",
+    "variant",
+    "enum",
+    "flags",
+    "type",
+    "resource",
+    "some",
+    "none",
+    "ok",
+    "error",
+    "true",
+    "false"
+  ]
 
+  func is-keyword(word: string) -> i32 {
+    // For each keyword
+    for keyword in keywords {
+      // Compare keyword
+      if word == keyword
+    }
+  }
 }
