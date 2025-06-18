@@ -67,6 +67,9 @@ build_modules=(
   "parser/patterns:parser-patterns"
   "parser/expression-core:parser-expression-core"
   "parser/main:parser-main"
+
+  # Type checker modules
+  "typechecker/main:typechecker-main"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -164,6 +167,8 @@ else
     $(find . -path './lexer/keywords/*' -name '*-test.wasm' | sort)
     $(find . -path './lexer/operators/*' -name '*-test.wasm' | sort)
     $(find . -path './lexer/token-storage/*' -name '*-test.wasm' | sort)
+    $(find . -path './lexer/identifiers/*' -name '*-test.wasm' | sort)
+    $(find . -path './lexer/memory/*' -name '*-test.wasm' | sort)
     $(find . -maxdepth 2 -path './lexer/*' -name '*-test.wasm' | sort)
     $(find . -path './ast/*' -name '*-test.wasm' | sort)
     $(find . -path './parser/*' -name '*-test.wasm' | sort)
@@ -192,11 +197,18 @@ for test in "${test_files[@]}"; do
     echo "    Path: $rel_path"
     echo -n "    Status: "
 
+    # Check if this is a pattern matching test and add required modules
+    pattern_preload_args=()
+    if [[ "$test_name" == *"pattern-matching"* || "$test_name" == *"pattern"* ]]; then
+      pattern_preload_args+=("--preload" "parser_patterns=parser-patterns.wasm")
+    fi
+
     # Capture both stdout and stderr
     if output=$(wasmtime run \
       --wasm all-proposals=y \
       --dir . \
       "${preload_args[@]}" \
+      "${pattern_preload_args[@]}" \
       "$test" 2>&1); then
       echo "✅ PASS"
       passed_tests=$((passed_tests + 1))

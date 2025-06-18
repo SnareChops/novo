@@ -6,13 +6,13 @@
   ;; Import node structure constants
   (import "ast_node_types" "NODE_DATA_OFFSET" (global $NODE_DATA_OFFSET i32))
 
-  ;; Define memory and export it
+  ;; Define memory and export it - use 4 pages (256KB) for AST nodes
   (memory (export "memory") 4)
 
-  ;; Memory Management Constants
-  (global $MEMORY_START i32 (i32.const 0))
+  ;; Memory Management Constants - Start after lexer memory areas
+  (global $MEMORY_START i32 (i32.const 60000))      ;; Start at ~59KB to use upper part of memory
   (global $FREE_LIST_HEAD (export "FREE_LIST_HEAD") (mut i32) (i32.const 0))  ;; Head of free block list
-  (global $ALLOC_CHUNK_SIZE i32 (i32.const 1024))   ;; Minimum allocation size
+  (global $ALLOC_CHUNK_SIZE i32 (i32.const 1024))   ;; 1KB chunks for better allocation
   (global $HEADER_SIZE i32 (i32.const 8))           ;; Size of allocation header
 
   ;; Initialize memory manager
@@ -20,12 +20,33 @@
   (func $init_memory_manager (export "init_memory_manager")
     (local $block i32)
     (local $size i32)
+    (local $i i32)
 
+    ;; Initialize multiple chunks to provide more memory
+    ;; With 256KB total memory, we can afford to initialize more chunks
+    (local.set $i (i32.const 0))
     (local.set $block (global.get $MEMORY_START))
     (local.set $size (global.get $ALLOC_CHUNK_SIZE))
-    (call $add_free_block
-      (local.get $block)
-      (local.get $size)))
+
+    ;; Initialize 32 chunks (16KB total allocation space)
+    (loop $init_chunks
+      (call $add_free_block
+        (local.get $block)
+        (local.get $size))
+
+      ;; Move to next chunk
+      (local.set $block
+        (i32.add
+          (local.get $block)
+          (local.get $size)))
+
+      ;; Increment counter
+      (local.set $i (i32.add (local.get $i) (i32.const 1)))
+
+      ;; Continue if we haven't reached 32 chunks
+      (br_if $init_chunks (i32.lt_u (local.get $i) (i32.const 32)))
+    )
+  )
 
   ;; Search for a free block of suitable size
   ;; @param $size i32 - Required block size (excluding header)

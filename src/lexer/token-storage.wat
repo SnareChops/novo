@@ -31,6 +31,15 @@
       )
     )
 
+    ;; Check bounds - ensure we don't exceed available token array space
+    ;; Token array goes from 2048 to 32767 (30720 bytes = 1920 tokens max)
+    (if (i32.ge_u (local.get $token_offset) (i32.const 32768))
+      (then
+        ;; Token array full, return error (-1)
+        (return (i32.const -1))
+      )
+    )
+
     ;; Store token fields
     (i32.store (i32.add (local.get $token_offset) (global.get $TOKEN_TYPE_OFFSET))
               (local.get $type))

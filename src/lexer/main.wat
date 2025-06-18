@@ -79,7 +79,8 @@
             (local.get $pos)
           )
         )
-        (return (local.get $token_idx) (local.get $pos))
+        ;; For EOF, advance position to indicate end of input
+        (return (local.get $token_idx) (i32.add (local.get $pos) (i32.const 1)))
       )
     )
 
@@ -290,14 +291,22 @@
 
       ;; Get next token
       (call $next_token (local.get $pos))
-      (local.set $next_pos)
       (local.set $token_idx)
+      (local.set $next_pos)
 
       ;; Check for error token
       (if (i32.eq (local.get $token_idx) (i32.const -1))
         (then
           ;; Error occurred, return failure
           (return (i32.const 0))
+        )
+      )
+
+      ;; Safety check: ensure position advances to prevent infinite loops
+      (if (i32.le_u (local.get $next_pos) (local.get $pos))
+        (then
+          ;; Position didn't advance, force advancement to prevent infinite loop
+          (local.set $next_pos (i32.add (local.get $pos) (i32.const 1)))
         )
       )
 

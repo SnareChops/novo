@@ -2,8 +2,16 @@
 ;; Handles parsing of match statements and pattern destructuring
 
 (module $parser_patterns
-  ;; Import memory from parser main
-  (import "parser_main" "memory" (memory 1))
+  ;; Import memory from lexer
+  (import "lexer_memory" "memory" (memory 1))
+
+  ;; Import lexer functions
+  (import "novo_lexer" "next_token" (func $next_token (param i32) (result i32 i32)))
+
+  ;; Import parser utilities
+  (import "parser_utils" "get_token_type" (func $get_token_type (param i32) (result i32)))
+  (import "parser_utils" "get_token_start" (func $get_token_start (param i32) (result i32)))
+  (import "parser_utils" "get_token_length" (func $get_token_length (param i32) (result i32)))
 
   ;; Import token type globals
   (import "tokens" "TOKEN_KW_MATCH" (global $TOKEN_KW_MATCH i32))
@@ -37,14 +45,6 @@
   (import "ast_node_types" "PAT_RESULT_ERR" (global $PAT_RESULT_ERR i32))
   (import "ast_node_types" "PAT_LIST" (global $PAT_LIST i32))
   (import "ast_node_types" "PAT_WILDCARD" (global $PAT_WILDCARD i32))
-
-  ;; Import parser utilities
-  (import "parser_utils" "current_token" (global $current_token (mut i32)))
-  (import "parser_utils" "get_token_type" (func $get_token_type (param i32) (result i32)))
-  (import "parser_utils" "next_token_pos" (func $next_token_pos (result i32)))
-  (import "parser_utils" "peek_token_type" (func $peek_token_type (result i32)))
-  (import "parser_utils" "expect_token" (func $expect_token (param i32) (result i32)))
-  (import "parser_utils" "advance_token" (func $advance_token))
 
   ;; Import AST node creators
   (import "ast_node_creators" "create_match_node" (func $create_match_node (param i32) (result i32)))
@@ -131,10 +131,10 @@
             )
           )
           (local.set $next_pos (i32.add (local.get $next_pos) (i32.const 1)))
-          
+
           ;; Parse inner pattern (placeholder for now)
           (local.set $pattern_node (call $create_pattern_option_some_node (i32.const 0)))
-          
+
           ;; Expect ')'
           (if (i32.ne (call $get_token_type (local.get $next_pos)) (global.get $TOKEN_RPAREN))
             (then
@@ -167,10 +167,10 @@
             )
           )
           (local.set $next_pos (i32.add (local.get $next_pos) (i32.const 1)))
-          
+
           ;; Parse inner pattern (placeholder for now)
           (local.set $pattern_node (call $create_pattern_result_ok_node (i32.const 0)))
-          
+
           ;; Expect ')'
           (if (i32.ne (call $get_token_type (local.get $next_pos)) (global.get $TOKEN_RPAREN))
             (then
@@ -194,10 +194,10 @@
             )
           )
           (local.set $next_pos (i32.add (local.get $next_pos) (i32.const 1)))
-          
+
           ;; Parse inner pattern (placeholder for now)
           (local.set $pattern_node (call $create_pattern_result_err_node (i32.const 0)))
-          
+
           ;; Expect ')'
           (if (i32.ne (call $get_token_type (local.get $next_pos)) (global.get $TOKEN_RPAREN))
             (then
@@ -253,7 +253,7 @@
 
     ;; Parse the expression body (placeholder for now - create simple identifier node)
     (local.set $body_node (i32.const 1)) ;; Placeholder body node
-    
+
     ;; Create match arm node
     (local.set $arm_node (call $create_match_arm_node (local.get $pattern_node) (local.get $body_node)))
 

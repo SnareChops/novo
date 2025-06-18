@@ -593,7 +593,7 @@
 
     ;; Create node with 4 bytes for expression pointer
     (local.set $node (call $create_node (global.get $CTRL_MATCH) (i32.const 4)))
-    
+
     (if (local.get $node)
       (then
         ;; Store expression node pointer
@@ -613,7 +613,7 @@
 
     ;; Create node with 8 bytes for pattern and body pointers
     (local.set $node (call $create_node (global.get $CTRL_MATCH_ARM) (i32.const 8)))
-    
+
     (if (local.get $node)
       (then
         ;; Store pattern node pointer
@@ -637,7 +637,7 @@
 
     ;; Create node with 4 bytes for token position
     (local.set $node (call $create_node (local.get $pattern_type) (i32.const 4)))
-    
+
     (if (local.get $node)
       (then
         ;; Store token position
@@ -656,7 +656,7 @@
 
     ;; Create node with 4 bytes for token position
     (local.set $node (call $create_node (global.get $PAT_VARIABLE) (i32.const 4)))
-    
+
     (if (local.get $node)
       (then
         ;; Store token position
@@ -682,7 +682,7 @@
 
     ;; Create node with 4 bytes for inner pattern pointer
     (local.set $node (call $create_node (global.get $PAT_OPTION_SOME) (i32.const 4)))
-    
+
     (if (local.get $node)
       (then
         ;; Store inner pattern pointer
@@ -708,7 +708,7 @@
 
     ;; Create node with 4 bytes for inner pattern pointer
     (local.set $node (call $create_node (global.get $PAT_RESULT_OK) (i32.const 4)))
-    
+
     (if (local.get $node)
       (then
         ;; Store inner pattern pointer
@@ -727,7 +727,7 @@
 
     ;; Create node with 4 bytes for inner pattern pointer
     (local.set $node (call $create_node (global.get $PAT_RESULT_ERR) (i32.const 4)))
-    
+
     (if (local.get $node)
       (then
         ;; Store inner pattern pointer
