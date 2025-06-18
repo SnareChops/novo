@@ -5,6 +5,9 @@
   ;; Import memory from lexer memory module
   (import "lexer_memory" "memory" (memory 1))
 
+  ;; Export memory for typechecker access
+  (export "memory" (memory 0))
+
   ;; Import lexer functions
   (import "novo_lexer" "next_token" (func $next_token (param i32) (result i32 i32)))
 

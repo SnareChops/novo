@@ -185,6 +185,29 @@
 
     (local.get $node))
 
+  ;; Create a float literal expression node
+  ;; @param $value f64 - Float value
+  ;; @returns i32 - Pointer to new node
+  (func $create_expr_float_literal (export "create_expr_float_literal") (param $value f64) (result i32)
+    (local $node i32)
+
+    ;; Create base node with 8 bytes for f64 value
+    (local.set $node
+      (call $create_node
+        (global.get $EXPR_FLOAT_LITERAL)
+        (i32.const 8)))
+
+    ;; If allocation successful, store value
+    (if (local.get $node)
+      (then
+        (f64.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $value))))
+
+    (local.get $node))
+
   ;; Create a boolean literal expression node
   ;; @param $value i32 - Boolean value (0 or 1)
   ;; @returns i32 - Pointer to new node

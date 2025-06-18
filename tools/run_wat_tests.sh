@@ -70,6 +70,7 @@ build_modules=(
 
   # Type checker modules
   "typechecker/main:typechecker-main"
+  "typechecker/expressions:typechecker-expressions"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -172,6 +173,7 @@ else
     $(find . -maxdepth 2 -path './lexer/*' -name '*-test.wasm' | sort)
     $(find . -path './ast/*' -name '*-test.wasm' | sort)
     $(find . -path './parser/*' -name '*-test.wasm' | sort)
+    $(find . -path './typechecker/*' -name '*-test.wasm' | sort)
   )
 fi
 
@@ -203,12 +205,20 @@ for test in "${test_files[@]}"; do
       pattern_preload_args+=("--preload" "parser_patterns=parser-patterns.wasm")
     fi
 
+    # Check if this is a typechecker test and add required modules
+    typechecker_preload_args=()
+    if [[ "$test_name" == *"typechecker"* || "$test_name" == *"type-checking"* ]]; then
+      typechecker_preload_args+=("--preload" "typechecker_main=typechecker-main.wasm")
+      typechecker_preload_args+=("--preload" "typechecker_expressions=typechecker-expressions.wasm")
+    fi
+
     # Capture both stdout and stderr
     if output=$(wasmtime run \
       --wasm all-proposals=y \
       --dir . \
       "${preload_args[@]}" \
       "${pattern_preload_args[@]}" \
+      "${typechecker_preload_args[@]}" \
       "$test" 2>&1); then
       echo "✅ PASS"
       passed_tests=$((passed_tests + 1))

@@ -2,8 +2,8 @@
 ;; Tests core type checking functionality
 
 (module $typechecker_basic_test
-  ;; Import memory
-  (import "memory" "memory" (memory 1))
+  ;; Import memory from parser main
+  (import "parser_main" "memory" (memory 1))
 
   ;; Import type checker functions
   (import "typechecker_main" "get_node_type_info" (func $get_node_type_info (param i32) (result i32)))
@@ -175,21 +175,31 @@
   ;; Main test function
   (func $run_tests (export "run_tests") (result i32)
     (local $success i32)
+    (local $all_passed i32)
+    (local.set $all_passed (i32.const 1))
 
     ;; Test 1: Type compatibility
     (local.set $success (call $test_type_compatibility))
+    (if (i32.eqz (local.get $success))
+      (then (local.set $all_passed (i32.const 0))))
 
     ;; Test 2: Node type info
     (local.set $success (call $test_node_type_info))
+    (if (i32.eqz (local.get $success))
+      (then (local.set $all_passed (i32.const 0))))
 
     ;; Test 3: Symbol table
     (local.set $success (call $test_symbol_table))
+    (if (i32.eqz (local.get $success))
+      (then (local.set $all_passed (i32.const 0))))
 
     ;; Test 4: Scope management
     (local.set $success (call $test_scope_management))
+    (if (i32.eqz (local.get $success))
+      (then (local.set $all_passed (i32.const 0))))
 
     ;; Return 1 if all tests passed, 0 otherwise
-    (i32.eq (global.get $pass_count) (i32.const 4))  ;; Expected 4 tests
+    (local.get $all_passed)  ;; Changed from: (i32.eq (global.get $pass_count) (i32.const 4))
   )
 
   ;; Start function for testing

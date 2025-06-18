@@ -34,6 +34,11 @@
   (import "ast_node_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
   (import "ast_node_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
   (import "ast_node_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
+  (import "ast_node_creators" "create_integer_literal" (func $create_integer_literal (param i32) (result i32)))
+  (import "ast_node_creators" "create_float_literal" (func $create_float_literal (param i32) (result i32)))
+  (import "ast_node_creators" "create_string_literal" (func $create_string_literal (param i32 i32) (result i32)))
+  (import "ast_node_creators" "create_bool_literal" (func $create_bool_literal (param i32) (result i32)))
+  (import "ast_node_creators" "create_binary_expr" (func $create_binary_expr (param i32 i32 i32 i32) (result i32)))
 
   ;; Initialize the AST system
   ;; Must be called before using any other AST functions
@@ -49,9 +54,13 @@
   (export "free_node_tree" (func $free_node_tree))
 
   ;; Export interface - Node creators
-  (export "create_type_primitive" (func $create_type_primitive))
   (export "create_decl_function" (func $create_decl_function))
   (export "create_expr_identifier" (func $create_expr_identifier))
+  (export "create_integer_literal" (func $create_integer_literal))
+  (export "create_float_literal" (func $create_float_literal))
+  (export "create_string_literal" (func $create_string_literal))
+  (export "create_bool_literal" (func $create_bool_literal))
+  (export "create_binary_expr" (func $create_binary_expr))
 
   ;; Export node type constants for external use
   (export "TYPE_PRIMITIVE" (global $TYPE_PRIMITIVE))

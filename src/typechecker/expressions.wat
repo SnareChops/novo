@@ -2,7 +2,7 @@
 ;; Handles type checking and inference for expressions
 
 (module $typechecker_expressions
-  ;; Import memory
+  ;; Import memory from parser main
   (import "parser_main" "memory" (memory 1))
 
   ;; Import type checker infrastructure
