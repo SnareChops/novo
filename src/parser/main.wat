@@ -21,9 +21,9 @@
   (import "lexer_tokens" "TOKEN_RPAREN" (global $TOKEN_RPAREN i32))
 
   ;; Import AST creation functions
-  (import "ast_node_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_integer_literal" (func $create_expr_integer_literal (param i64) (result i32)))
-  (import "ast_node_creators" "create_expr_string_literal" (func $create_expr_string_literal (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_integer_literal" (func $create_expr_integer_literal (param i64) (result i32)))
+  (import "ast_expression_creators" "create_expr_string_literal" (func $create_expr_string_literal (param i32 i32) (result i32)))
 
   ;; Import utility functions
   (import "parser_utils" "get_token_type" (func $get_token_type (param i32) (result i32)))

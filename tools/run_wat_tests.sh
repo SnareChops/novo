@@ -24,7 +24,9 @@ else
   TEST_FILTER=""
 fi
 
-# Create build directory
+# Clear and recreate build directory for fresh build
+echo "Clearing build directory for fresh build..."
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 echo "Compiling WAT modules..."
@@ -55,6 +57,12 @@ build_modules=(
   "ast/node-types:ast-node-types"
   "ast/memory:ast-memory"
   "ast/node-core:ast-node-core"
+  # Split AST node creators
+  "ast/type-creators:ast-type-creators"
+  "ast/expression-creators:ast-expression-creators"
+  "ast/control-flow-creators:ast-control-flow-creators"
+  "ast/pattern-creators:ast-pattern-creators"
+  "ast/declaration-creators:ast-declaration-creators"
   "ast/node-creators:ast-node-creators"
   "ast/main:ast-main"
 
@@ -65,13 +73,18 @@ build_modules=(
   "parser/functions:parser-functions"
   "parser/control-flow:parser-control-flow"
   "parser/patterns:parser-patterns"
+  # Split parser expression modules
+  "parser/expression-utilities:parser-expression-utilities"
+  "parser/expression-parsing:parser-expression-parsing"
   "parser/expression-core:parser-expression-core"
   "parser/main:parser-main"
 
   # Type checker modules
   "typechecker/main:typechecker-main"
   "typechecker/expressions:typechecker-expressions"
-  "typechecker/patterns:typechecker-patterns"
+  # Split typechecker pattern modules
+  "typechecker/pattern-matching:typechecker-pattern-matching"
+  "typechecker/pattern-validation:typechecker-pattern-validation"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -118,14 +131,29 @@ preloads=(
   "ast_node_types=ast-node-types.wasm"
   "ast_memory=ast-memory.wasm"
   "ast_node_core=ast-node-core.wasm"
+  # Split AST node creator modules
+  "ast_type_creators=ast-type-creators.wasm"
+  "ast_expression_creators=ast-expression-creators.wasm"
+  "ast_control_flow_creators=ast-control-flow-creators.wasm"
+  "ast_pattern_creators=ast-pattern-creators.wasm"
+  "ast_declaration_creators=ast-declaration-creators.wasm"
   "ast_node_creators=ast-node-creators.wasm"
   "parser_precedence=parser-precedence.wasm"
   "parser_utils=parser-utils.wasm"
   "parser_types=parser-types.wasm"
+  # Split parser expression modules (dependencies first)
+  "novo_parser_expression_utilities=parser-expression-utilities.wasm"
+  "parser_expression_parsing=parser-expression-parsing.wasm"
+  "parser_expression_core=parser-expression-core.wasm"
   "parser_functions=parser-functions.wasm"
   "parser_control_flow=parser-control-flow.wasm"
   "parser_main=parser-main.wasm"
-  "parser_expression_core=parser-expression-core.wasm"
+  # Typechecker modules (main must come before pattern modules)
+  "typechecker_main=typechecker-main.wasm"
+  "typechecker_expressions=typechecker-expressions.wasm"
+  # Split typechecker pattern modules
+  "typechecker_pattern_matching=typechecker-pattern-matching.wasm"
+  "typechecker_pattern_validation=typechecker-pattern-validation.wasm"
 )
 preload_args=()
 for preload in "${preloads[@]}"; do
@@ -208,10 +236,11 @@ for test in "${test_files[@]}"; do
 
     # Check if this is a typechecker test and add required modules
     typechecker_preload_args=()
+    # Note: Removed typechecker preloads to avoid duplicate import conflicts
+    # wasmtime will automatically resolve dependencies
     if [[ "$test_name" == *"typechecker"* || "$test_name" == *"type-checking"* || "$test_name" == *"type-checker"* ]]; then
-      typechecker_preload_args+=("--preload" "typechecker_main=typechecker-main.wasm")
-      typechecker_preload_args+=("--preload" "typechecker_expressions=typechecker-expressions.wasm")
-      typechecker_preload_args+=("--preload" "typechecker_patterns=typechecker-patterns.wasm")
+      # Let wasmtime handle dependencies automatically
+      :
     fi
 
     # Capture both stdout and stderr

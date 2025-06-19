@@ -46,19 +46,19 @@
   (import "ast_node_types" "PAT_LIST" (global $PAT_LIST i32))
   (import "ast_node_types" "PAT_WILDCARD" (global $PAT_WILDCARD i32))
 
-  ;; Import AST node creators
-  (import "ast_node_creators" "create_match_node" (func $create_match_node (param i32) (result i32)))
-  (import "ast_node_creators" "create_match_arm_node" (func $create_match_arm_node (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_pattern_literal_node" (func $create_pattern_literal_node (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_pattern_variable_node" (func $create_pattern_variable_node (param i32) (result i32)))
-  (import "ast_node_creators" "create_pattern_wildcard_node" (func $create_pattern_wildcard_node (result i32)))
-  (import "ast_node_creators" "create_pattern_option_some_node" (func $create_pattern_option_some_node (param i32) (result i32)))
-  (import "ast_node_creators" "create_pattern_option_none_node" (func $create_pattern_option_none_node (result i32)))
-  (import "ast_node_creators" "create_pattern_result_ok_node" (func $create_pattern_result_ok_node (param i32) (result i32)))
-  (import "ast_node_creators" "create_pattern_result_err_node" (func $create_pattern_result_err_node (param i32) (result i32)))
+  ;; Import AST pattern creators
+  (import "ast_control_flow_creators" "create_match_node" (func $create_match_node (param i32) (result i32)))
+  (import "ast_control_flow_creators" "create_match_arm_node" (func $create_match_arm_node (param i32 i32) (result i32)))
+  (import "ast_pattern_creators" "create_pattern_literal_node" (func $create_pattern_literal_node (param i32 i32) (result i32)))
+  (import "ast_pattern_creators" "create_pattern_variable_node" (func $create_pattern_variable_node (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pattern_wildcard_node" (func $create_pattern_wildcard_node (result i32)))
+  (import "ast_pattern_creators" "create_pattern_option_some_node" (func $create_pattern_option_some_node (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pattern_option_none_node" (func $create_pattern_option_none_node (result i32)))
+  (import "ast_pattern_creators" "create_pattern_result_ok_node" (func $create_pattern_result_ok_node (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pattern_result_err_node" (func $create_pattern_result_err_node (param i32) (result i32)))
 
   ;; Import expression parsing (for match expression and arm bodies)
-  (import "parser_expression_core" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
+  (import "parser_expression_parsing" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
 
   ;; Import AST core functions
   (import "ast_node_core" "add_child" (func $add_child (param i32 i32) (result i32)))

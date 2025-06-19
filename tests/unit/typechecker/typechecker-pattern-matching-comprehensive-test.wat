@@ -1,23 +1,23 @@
 ;; Comprehensive Pattern Matching Type Checker Test
 ;; Tests the enhanced pattern matching type checking functionality
 
-(module $pattern_matching_comprehensive_test
+(module $typechecker_pattern_matching_comprehensive_test
   ;; Import memory
   (import "lexer_memory" "memory" (memory 1))
 
   ;; Import AST functions
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_match" (func $create_ctrl_match (param i32 i32 i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_match_arm" (func $create_ctrl_match_arm (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_pat_literal" (func $create_pat_literal (param i32) (result i32)))
-  (import "ast_node_creators" "create_pat_variable" (func $create_pat_variable (param i32) (result i32)))
-  (import "ast_node_creators" "create_pat_wildcard" (func $create_pat_wildcard (result i32)))
-  (import "ast_node_creators" "create_expr_integer_literal" (func $create_expr_integer_literal (param i64) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_match" (func $create_ctrl_match (param i32 i32 i32) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_match_arm" (func $create_ctrl_match_arm (param i32 i32) (result i32)))
+  (import "ast_pattern_creators" "create_pat_literal" (func $create_pat_literal (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pat_variable" (func $create_pat_variable (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pat_wildcard" (func $create_pat_wildcard (result i32)))
+  (import "ast_expression_creators" "create_expr_integer_literal" (func $create_expr_integer_literal (param i64) (result i32)))
 
   ;; Import pattern matching type checker functions
-  (import "typechecker_patterns" "check_pattern" (func $check_pattern (param i32 i32) (result i32)))
-  (import "typechecker_patterns" "check_pattern_guard" (func $check_pattern_guard (param i32) (result i32)))
-  (import "typechecker_patterns" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
+  (import "typechecker_pattern_matching" "check_pattern" (func $check_pattern (param i32 i32) (result i32)))
+  (import "typechecker_pattern_validation" "check_pattern_guard" (func $check_pattern_guard (param i32) (result i32)))
+  (import "typechecker_pattern_validation" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
 
   ;; Import type checker main functions
   (import "typechecker_main" "TYPE_BOOL" (global $TYPE_BOOL i32))

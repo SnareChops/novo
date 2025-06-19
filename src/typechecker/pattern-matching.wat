@@ -1,7 +1,7 @@
-;; Pattern Matching Type Checker
-;; Handles type checking for match statements and pattern destructuring
+;; Pattern Matching Type Checker - Core Logic
+;; Handles match statements and pattern type checking
 
-(module $typechecker_patterns
+(module $typechecker_pattern_matching
   ;; Import memory
   (import "lexer_memory" "memory" (memory 1))
 
@@ -12,6 +12,7 @@
   (import "typechecker_main" "add_symbol" (func $add_symbol (param i32 i32 i32) (result i32)))
   (import "typechecker_main" "enter_scope" (func $enter_scope))
   (import "typechecker_main" "exit_scope" (func $exit_scope))
+  (import "typechecker_expressions" "typecheck_expression" (func $check_expression (param i32) (result i32)))
 
   ;; Import AST functions
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
@@ -48,60 +49,57 @@
     (local $i i32)
     (local $arm_node i32)
     (local $result i32)
-    (local $is_exhaustive i32)
 
-    ;; Validate node type
-    (if (i32.ne (call $get_node_type (local.get $match_node)) (global.get $CTRL_MATCH))
+    (if (i32.eqz (local.get $match_node))
       (then (return (i32.const 1))))
 
-    ;; Get and type check the match expression (first child)
+    ;; Get the expression being matched (first child)
     (local.set $expression_node (call $get_child (local.get $match_node) (i32.const 0)))
     (if (i32.eqz (local.get $expression_node))
       (then (return (i32.const 1))))
 
-    ;; Get the type of the expression being matched
+    ;; Type check the expression
+    (local.set $result (call $check_expression (local.get $expression_node)))
+    (if (local.get $result)
+      (then (return (local.get $result))))
+
+    ;; Get the type of the expression
     (local.set $expression_type (call $get_node_type_info (local.get $expression_node)))
-    (if (i32.eq (local.get $expression_type) (global.get $TYPE_UNKNOWN))
+    (if (i32.eq (local.get $expression_type) (global.get $TYPE_ERROR))
       (then (return (i32.const 1))))
 
-    ;; Check each match arm
+    ;; Type check all match arms
     (local.set $arm_count (call $get_child_count (local.get $match_node)))
-    (local.set $i (i32.const 1)) ;; Skip expression (first child)
-    (local.set $is_exhaustive (i32.const 0))
+    (local.set $i (i32.const 1)) ;; Start from 1 (skip expression)
 
     (loop $arm_loop
-      (if (i32.lt_u (local.get $i) (local.get $arm_count))
-        (then
-          (local.set $arm_node (call $get_child (local.get $match_node) (local.get $i)))
+      (if (i32.ge_u (local.get $i) (local.get $arm_count))
+        (then (br $arm_loop))) ;; Exit loop
 
-          ;; Type check this arm
-          (local.set $result (call $check_match_arm (local.get $arm_node) (local.get $expression_type)))
-          (if (i32.ne (local.get $result) (i32.const 0))
-            (then (return (local.get $result))))
+      (local.set $arm_node (call $get_child (local.get $match_node) (local.get $i)))
+      (local.set $result (call $check_match_arm (local.get $arm_node) (local.get $expression_type)))
 
-          ;; Check if this is a wildcard pattern (makes match exhaustive)
-          (if (call $is_wildcard_arm (local.get $arm_node))
-            (then (local.set $is_exhaustive (i32.const 1))))
+      (if (local.get $result)
+        (then (return (local.get $result))))
 
-          (local.set $i (i32.add (local.get $i) (i32.const 1)))
-          (br $arm_loop))))
+      (local.set $i (i32.add (local.get $i) (i32.const 1)))
+      (br $arm_loop)
+    )
 
-    ;; For now, we don't enforce exhaustiveness checking
-    ;; This would be enhanced in a more complete implementation
+    ;; All arms type checked successfully
     (i32.const 0)
   )
 
-  ;; Type check a single match arm
+  ;; Type check a match arm (pattern + body)
   ;; @param $arm_node i32 - Pointer to match arm AST node
   ;; @param $expression_type i32 - Type of the matched expression
   ;; @returns i32 - Result (0 = success, 1 = error)
-  (func $check_match_arm (param $arm_node i32) (param $expression_type i32) (result i32)
+  (func $check_match_arm (export "check_match_arm") (param $arm_node i32) (param $expression_type i32) (result i32)
     (local $pattern_node i32)
     (local $body_node i32)
     (local $result i32)
 
-    ;; Validate node type
-    (if (i32.ne (call $get_node_type (local.get $arm_node)) (global.get $CTRL_MATCH_ARM))
+    (if (i32.eqz (local.get $arm_node))
       (then (return (i32.const 1))))
 
     ;; Get pattern (first child) and body (second child)
@@ -110,6 +108,8 @@
 
     (if (i32.eqz (local.get $pattern_node))
       (then (return (i32.const 1))))
+    (if (i32.eqz (local.get $body_node))
+      (then (return (i32.const 1))))
 
     ;; Enter new scope for pattern variables
     (call $enter_scope)
@@ -117,15 +117,15 @@
     ;; Type check the pattern against the expression type
     (local.set $result (call $check_pattern (local.get $pattern_node) (local.get $expression_type)))
 
-    ;; Type check the body if pattern checking succeeded
-    (if (i32.eq (local.get $result) (i32.const 0))
+    (if (local.get $result)
       (then
-        (if (local.get $body_node)
-          (then
-            ;; For now, assume body type checking is handled elsewhere
-            (nop)))))
+        (call $exit_scope)
+        (return (local.get $result))))
 
-    ;; Exit scope
+    ;; Type check the body expression
+    (local.set $result (call $check_expression (local.get $body_node)))
+
+    ;; Exit pattern variable scope
     (call $exit_scope)
 
     (local.get $result)
@@ -179,7 +179,7 @@
   )
 
   ;; Check literal pattern
-  (func $check_literal_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_literal_pattern (export "check_literal_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     (local $literal_type i32)
 
     ;; Get the type of the literal from the AST node
@@ -197,7 +197,7 @@
   )
 
   ;; Check variable pattern - binds variable to the expected type
-  (func $check_variable_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_variable_pattern (export "check_variable_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     (local $variable_name_ptr i32)
     (local $variable_name_len i32)
     (local $result i32)
@@ -218,13 +218,13 @@
   )
 
   ;; Check wildcard pattern - matches any type
-  (func $check_wildcard_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_wildcard_pattern (export "check_wildcard_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     ;; Wildcard patterns always match
     (i32.const 0)
   )
 
   ;; Check option some pattern
-  (func $check_option_some_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_option_some_pattern (export "check_option_some_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     (local $inner_pattern i32)
     (local $inner_type i32)
     (local $result i32)
@@ -254,7 +254,7 @@
   )
 
   ;; Check option none pattern
-  (func $check_option_none_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_option_none_pattern (export "check_option_none_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     ;; Verify that expected_type is an option type
     ;; None patterns don't have inner patterns, so we just need to verify
     ;; that the expected type is compatible with an option type
@@ -269,7 +269,7 @@
   )
 
   ;; Check result ok pattern
-  (func $check_result_ok_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_result_ok_pattern (export "check_result_ok_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     (local $inner_pattern i32)
     (local $inner_type i32)
     (local $result i32)
@@ -299,7 +299,7 @@
   )
 
   ;; Check result error pattern
-  (func $check_result_err_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
+  (func $check_result_err_pattern (export "check_result_err_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
     (local $inner_pattern i32)
     (local $inner_type i32)
     (local $result i32)
@@ -308,10 +308,10 @@
     ;; For now, we use a simplified check - in a complete implementation,
     ;; we would have proper type introspection to check if it's result<T, E>
 
-    ;; Get the inner pattern (first child of the error pattern)
+    ;; Get the inner pattern (first child of the err pattern)
     (local.set $inner_pattern (call $get_child (local.get $pattern_node) (i32.const 0)))
     (if (i32.eqz (local.get $inner_pattern))
-      (then (return (i32.const 1)))) ;; Error: error pattern must have inner pattern
+      (then (return (i32.const 1)))) ;; Error: err pattern must have inner pattern
 
     ;; Extract the error type from the result type
     ;; For now, assume expected_type points to the error type
@@ -329,35 +329,35 @@
   )
 
   ;; Check tuple pattern
-  (func $check_tuple_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
-    (local $element_count i32)
+  (func $check_tuple_pattern (export "check_tuple_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
+    (local $child_count i32)
     (local $i i32)
-    (local $element_pattern i32)
-    (local $element_type i32)
+    (local $child_pattern i32)
+    (local $child_type i32)
     (local $result i32)
 
-    ;; Get the number of elements in the tuple pattern
-    (local.set $element_count (call $get_child_count (local.get $pattern_node)))
+    ;; Get number of pattern elements
+    (local.set $child_count (call $get_child_count (local.get $pattern_node)))
 
-    ;; For now, we assume all tuple elements have the same type as the expected type
-    ;; In a complete implementation, we would extract individual element types from tuple<T1, T2, ...>
-    (local.set $element_type (local.get $expected_type))
-
-    ;; Check each element pattern
+    ;; Type check each element pattern
     (local.set $i (i32.const 0))
     (loop $element_loop
-      (if (i32.lt_u (local.get $i) (local.get $element_count))
-        (then
-          (local.set $element_pattern (call $get_child (local.get $pattern_node) (local.get $i)))
-          (if (local.get $element_pattern)
-            (then
-              ;; Recursively check this element pattern
-              (local.set $result (call $check_pattern (local.get $element_pattern) (local.get $element_type)))
-              (if (i32.ne (local.get $result) (i32.const 0))
-                (then (return (local.get $result))))))
+      (if (i32.ge_u (local.get $i) (local.get $child_count))
+        (then (br $element_loop))) ;; Exit loop
 
-          (local.set $i (i32.add (local.get $i) (i32.const 1)))
-          (br $element_loop))))
+      (local.set $child_pattern (call $get_child (local.get $pattern_node) (local.get $i)))
+
+      ;; For now, assume all tuple elements have the same type as expected_type
+      ;; In a complete implementation, we would extract the proper element type
+      (local.set $child_type (local.get $expected_type))
+
+      (local.set $result (call $check_pattern (local.get $child_pattern) (local.get $child_type)))
+      (if (local.get $result)
+        (then (return (local.get $result))))
+
+      (local.set $i (i32.add (local.get $i) (i32.const 1)))
+      (br $element_loop)
+    )
 
     ;; Set pattern type info
     (drop (call $set_node_type_info (local.get $pattern_node) (local.get $expected_type)))
@@ -366,38 +366,35 @@
   )
 
   ;; Check record pattern
-  (func $check_record_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
-    (local $field_count i32)
+  (func $check_record_pattern (export "check_record_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
+    (local $child_count i32)
     (local $i i32)
     (local $field_pattern i32)
     (local $field_type i32)
     (local $result i32)
 
-    ;; Get the number of fields in the record pattern
-    (local.set $field_count (call $get_child_count (local.get $pattern_node)))
+    ;; Get number of field patterns
+    (local.set $child_count (call $get_child_count (local.get $pattern_node)))
 
-    ;; For now, we assume all record fields have the same type as the expected type
-    ;; In a complete implementation, we would:
-    ;; 1. Extract field names from the pattern
-    ;; 2. Look up field types in the record type definition
-    ;; 3. Match field patterns against their corresponding types
-    (local.set $field_type (local.get $expected_type))
-
-    ;; Check each field pattern
+    ;; Type check each field pattern
     (local.set $i (i32.const 0))
     (loop $field_loop
-      (if (i32.lt_u (local.get $i) (local.get $field_count))
-        (then
-          (local.set $field_pattern (call $get_child (local.get $pattern_node) (local.get $i)))
-          (if (local.get $field_pattern)
-            (then
-              ;; Recursively check this field pattern
-              (local.set $result (call $check_pattern (local.get $field_pattern) (local.get $field_type)))
-              (if (i32.ne (local.get $result) (i32.const 0))
-                (then (return (local.get $result))))))
+      (if (i32.ge_u (local.get $i) (local.get $child_count))
+        (then (br $field_loop))) ;; Exit loop
 
-          (local.set $i (i32.add (local.get $i) (i32.const 1)))
-          (br $field_loop))))
+      (local.set $field_pattern (call $get_child (local.get $pattern_node) (local.get $i)))
+
+      ;; For now, assume all record fields have the same type as expected_type
+      ;; In a complete implementation, we would extract the proper field type
+      (local.set $field_type (local.get $expected_type))
+
+      (local.set $result (call $check_pattern (local.get $field_pattern) (local.get $field_type)))
+      (if (local.get $result)
+        (then (return (local.get $result))))
+
+      (local.set $i (i32.add (local.get $i) (i32.const 1)))
+      (br $field_loop)
+    )
 
     ;; Set pattern type info
     (drop (call $set_node_type_info (local.get $pattern_node) (local.get $expected_type)))
@@ -406,128 +403,33 @@
   )
 
   ;; Check variant pattern
-  (func $check_variant_pattern (param $pattern_node i32) (param $expected_type i32) (result i32)
-    (local $variant_tag i32)
-    (local $field_count i32)
-    (local $i i32)
-    (local $field_pattern i32)
-    (local $field_type i32)
+  (func $check_variant_pattern (export "check_variant_pattern") (param $pattern_node i32) (param $expected_type i32) (result i32)
+    (local $child_count i32)
+    (local $inner_pattern i32)
+    (local $inner_type i32)
     (local $result i32)
 
-    ;; Verify that expected_type is a variant type
-    ;; For now, we use a simplified check - in a complete implementation,
-    ;; we would have proper type introspection to check variant compatibility
+    ;; Get number of children (should be 0 for unit variants, 1 for variants with data)
+    (local.set $child_count (call $get_child_count (local.get $pattern_node)))
 
-    ;; Get the variant tag (this would be extracted from the pattern AST)
-    ;; For now, we use a placeholder
-    (local.set $variant_tag (i32.const 0))
+    (if (i32.gt_u (local.get $child_count) (i32.const 0))
+      (then
+        ;; Variant with associated data
+        (local.set $inner_pattern (call $get_child (local.get $pattern_node) (i32.const 0)))
 
-    ;; Get the number of fields in the variant pattern
-    (local.set $field_count (call $get_child_count (local.get $pattern_node)))
+        ;; For now, assume variant data has the same type as expected_type
+        ;; In a complete implementation, we would extract the proper variant data type
+        (local.set $inner_type (local.get $expected_type))
 
-    ;; For now, assume all variant fields have the same type as the expected type
-    ;; In a complete implementation, we would:
-    ;; 1. Extract the variant constructor name from the pattern
-    ;; 2. Look up the constructor's field types in the variant definition
-    ;; 3. Match field patterns against their corresponding types
-    (local.set $field_type (local.get $expected_type))
-
-    ;; Check each field pattern
-    (local.set $i (i32.const 0))
-    (loop $field_loop
-      (if (i32.lt_u (local.get $i) (local.get $field_count))
-        (then
-          (local.set $field_pattern (call $get_child (local.get $pattern_node) (local.get $i)))
-          (if (local.get $field_pattern)
-            (then
-              ;; Recursively check this field pattern
-              (local.set $result (call $check_pattern (local.get $field_pattern) (local.get $field_type)))
-              (if (i32.ne (local.get $result) (i32.const 0))
-                (then (return (local.get $result))))))
-
-          (local.set $i (i32.add (local.get $i) (i32.const 1)))
-          (br $field_loop))))
+        (local.set $result (call $check_pattern (local.get $inner_pattern) (local.get $inner_type)))
+        (if (local.get $result)
+          (then (return (local.get $result))))
+      )
+    )
 
     ;; Set pattern type info
     (drop (call $set_node_type_info (local.get $pattern_node) (local.get $expected_type)))
 
     (i32.const 0) ;; Success
-  )
-
-  ;; Helper function to check if a match arm contains a wildcard pattern
-  (func $is_wildcard_arm (param $arm_node i32) (result i32)
-    (local $pattern_node i32)
-
-    (local.set $pattern_node (call $get_child (local.get $arm_node) (i32.const 0)))
-    (if (i32.eqz (local.get $pattern_node))
-      (then (return (i32.const 0))))
-
-    (i32.eq (call $get_node_type (local.get $pattern_node)) (global.get $PAT_WILDCARD))
-  )
-
-  ;; Check if a pattern contains guard expressions (boolean expressions)
-  ;; @param $pattern_node i32 - Pointer to pattern AST node
-  ;; @returns i32 - Result (0 = success, 1 = error)
-  (func $check_pattern_guard (export "check_pattern_guard") (param $pattern_node i32) (result i32)
-    (local $guard_expr i32)
-    (local $guard_type i32)
-
-    ;; Check if this pattern has a guard expression
-    ;; For now, we assume guard expressions are stored as a child node
-    ;; In a complete implementation, we would have a specific field for guards
-    (local.set $guard_expr (call $get_child (local.get $pattern_node) (i32.const 1)))
-
-    (if (i32.eqz (local.get $guard_expr))
-      (then (return (i32.const 0)))) ;; No guard, success
-
-    ;; Type check the guard expression
-    ;; Guards must evaluate to boolean type
-    (local.set $guard_type (call $get_node_type_info (local.get $guard_expr)))
-
-    ;; If guard type is unknown, it might need type inference
-    (if (i32.eq (local.get $guard_type) (global.get $TYPE_UNKNOWN))
-      (then
-        ;; Set expected type to boolean
-        (call $set_node_type_info (local.get $guard_expr) (global.get $TYPE_BOOL))
-        (return (i32.const 0))))
-
-    ;; Check if guard type is compatible with boolean
-    (call $types_compatible (local.get $guard_type) (global.get $TYPE_BOOL))
-  )
-
-  ;; Validate exhaustiveness of match statement
-  ;; @param $match_node i32 - Pointer to match AST node
-  ;; @returns i32 - Result (0 = exhaustive, 1 = non-exhaustive)
-  (func $check_exhaustiveness (export "check_exhaustiveness") (param $match_node i32) (result i32)
-    (local $arm_count i32)
-    (local $i i32)
-    (local $arm_node i32)
-    (local $has_wildcard i32)
-
-    ;; Get match arms (skip expression, which is first child)
-    (local.set $arm_count (call $get_child_count (local.get $match_node)))
-    (local.set $i (i32.const 1))
-    (local.set $has_wildcard (i32.const 0))
-
-    (loop $check_loop
-      (if (i32.lt_u (local.get $i) (local.get $arm_count))
-        (then
-          (local.set $arm_node (call $get_child (local.get $match_node) (local.get $i)))
-
-          ;; Check if this arm has a wildcard pattern
-          (if (call $is_wildcard_arm (local.get $arm_node))
-            (then (local.set $has_wildcard (i32.const 1))))
-
-          (local.set $i (i32.add (local.get $i) (i32.const 1)))
-          (br $check_loop))))
-
-    ;; For now, we consider a match exhaustive if it has a wildcard
-    ;; A more complete implementation would analyze all patterns for exhaustiveness
-    (if (local.get $has_wildcard)
-      (then (return (i32.const 0)))  ;; Exhaustive
-      (else (return (i32.const 1)))) ;; Non-exhaustive
-
-    ;; This should never be reached, but needed for type checking
-    (i32.const 1)
   )
 )

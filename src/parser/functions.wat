@@ -27,7 +27,7 @@
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
 
   ;; Import AST creation functions
-  (import "ast_node_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
   (import "ast_node_core" "add_child" (func $add_child (param i32 i32) (result i32)))
 
   ;; Import utility functions

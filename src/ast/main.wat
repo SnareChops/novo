@@ -31,14 +31,14 @@
   (import "ast_node_core" "free_node_tree" (func $free_node_tree (param i32)))
 
   ;; Import node creator functions
-  (import "ast_node_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
-  (import "ast_node_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_integer_literal" (func $create_integer_literal (param i32) (result i32)))
-  (import "ast_node_creators" "create_float_literal" (func $create_float_literal (param i32) (result i32)))
-  (import "ast_node_creators" "create_string_literal" (func $create_string_literal (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_bool_literal" (func $create_bool_literal (param i32) (result i32)))
-  (import "ast_node_creators" "create_binary_expr" (func $create_binary_expr (param i32 i32 i32 i32) (result i32)))
+  (import "ast_type_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_integer_literal" (func $create_integer_literal (param i32) (result i32)))
+  (import "ast_expression_creators" "create_float_literal" (func $create_float_literal (param i32) (result i32)))
+  (import "ast_expression_creators" "create_string_literal" (func $create_string_literal (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_bool_literal" (func $create_bool_literal (param i32) (result i32)))
+  (import "ast_expression_creators" "create_binary_expr" (func $create_binary_expr (param i32 i32 i32 i32) (result i32)))
 
   ;; Initialize the AST system
   ;; Must be called before using any other AST functions

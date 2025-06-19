@@ -7,21 +7,20 @@
 
   ;; Import AST functions
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_match" (func $create_ctrl_match (param i32 i32 i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_match_arm" (func $create_ctrl_match_arm (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_pat_literal" (func $create_pat_literal (param i32) (result i32)))
-  (import "ast_node_creators" "create_pat_variable" (func $create_pat_variable (param i32) (result i32)))
-  (import "ast_node_creators" "create_pat_wildcard" (func $create_pat_wildcard (result i32)))
-  (import "ast_node_creators" "create_expr_integer_literal" (func $create_expr_integer_literal (param i32) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_match" (func $create_ctrl_match (param i32 i32 i32) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_match_arm" (func $create_ctrl_match_arm (param i32 i32) (result i32)))
+  (import "ast_pattern_creators" "create_pat_literal" (func $create_pat_literal (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pat_variable" (func $create_pat_variable (param i32) (result i32)))
+  (import "ast_pattern_creators" "create_pat_wildcard" (func $create_pat_wildcard (result i32)))
 
   ;; Import pattern matching type checker functions
-  (import "typechecker_patterns" "check_pattern" (func $check_pattern (param i32 i32) (result i32)))
-  (import "typechecker_patterns" "check_pattern_guard" (func $check_pattern_guard (param i32) (result i32)))
-  (import "typechecker_patterns" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
+  (import "typechecker_pattern_matching" "check_pattern" (func $check_pattern (param i32 i32) (result i32)))
+  (import "typechecker_pattern_validation" "check_pattern_guard" (func $check_pattern_guard (param i32) (result i32)))
+  (import "typechecker_pattern_validation" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
 
   ;; Import type checker main functions
   (import "typechecker_main" "TYPE_BOOL" (global $TYPE_BOOL i32))
-  (import "typechecker_main" "TYPE_S32" (global $TYPE_S32 i32))
+  (import "typechecker_main" "TYPE_I32" (global $TYPE_I32 i32))
   (import "typechecker_main" "TYPE_UNKNOWN" (global $TYPE_UNKNOWN i32))
 
   ;; Import node type constants
@@ -37,11 +36,11 @@
 
     (local.set $total_passed (i32.const 0))
 
-    ;; Test 1: Create a literal pattern and check it against s32 type
+    ;; Test 1: Create a literal pattern and check it against i32 type
     (local.set $pattern_node (call $create_pat_literal (global.get $PAT_LITERAL)))
     (if (i32.ne (local.get $pattern_node) (i32.const 0))
       (then
-        (local.set $result (call $check_pattern (local.get $pattern_node) (global.get $TYPE_S32)))
+        (local.set $result (call $check_pattern (local.get $pattern_node) (global.get $TYPE_I32)))
         (if (i32.eq (local.get $result) (i32.const 0))
           (then (local.set $total_passed (i32.add (local.get $total_passed) (i32.const 1)))))))
 
@@ -49,7 +48,7 @@
     (local.set $pattern_node (call $create_pat_variable (global.get $PAT_VARIABLE)))
     (if (i32.ne (local.get $pattern_node) (i32.const 0))
       (then
-        (local.set $result (call $check_pattern (local.get $pattern_node) (global.get $TYPE_S32)))
+        (local.set $result (call $check_pattern (local.get $pattern_node) (global.get $TYPE_I32)))
         (if (i32.eq (local.get $result) (i32.const 0))
           (then (local.set $total_passed (i32.add (local.get $total_passed) (i32.const 1)))))))
 

@@ -47,11 +47,11 @@
   (import "lexer_tokens" "TOKEN_KW_RESOURCE" (global $TOKEN_KW_RESOURCE i32))
 
   ;; Import AST node creators
-  (import "ast_node_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
-  (import "ast_node_creators" "create_type_list" (func $create_type_list (param i32) (result i32)))
-  (import "ast_node_creators" "create_type_option" (func $create_type_option (param i32) (result i32)))
-  (import "ast_node_creators" "create_type_result" (func $create_type_result (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_type_tuple" (func $create_type_tuple (param i32) (result i32)))
+  (import "ast_type_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
+  (import "ast_type_creators" "create_type_list" (func $create_type_list (param i32) (result i32)))
+  (import "ast_type_creators" "create_type_option" (func $create_type_option (param i32) (result i32)))
+  (import "ast_type_creators" "create_type_result" (func $create_type_result (param i32 i32) (result i32)))
+  (import "ast_type_creators" "create_type_tuple" (func $create_type_tuple (param i32) (result i32)))
 
   ;; Import AST core functions
   (import "ast_node_core" "add_child" (func $add_child (param i32 i32) (result i32)))

@@ -1,7 +1,7 @@
-;; Novo Parser Expression Core
+;; Novo Parser Expression Parsing
 ;; Core expression parsing logic using precedence climbing
 
-(module $novo_parser_expression_core
+(module $novo_parser_expression_parsing
   ;; Import memory from lexer
   (import "lexer_memory" "memory" (memory 1))
 
@@ -52,54 +52,11 @@
   (import "parser_utils" "get_token_start" (func $get_token_start (param i32) (result i32)))
   (import "parser_utils" "get_token_length" (func $get_token_length (param i32) (result i32)))
 
-  ;; No external function call parsers needed - inline the logic
-
-  ;; Memory layout constants
-  (global $TOKEN_ARRAY_START i32 (i32.const 2048))
-  (global $TOKEN_RECORD_SIZE i32 (i32.const 16))
-
-  ;; Helper function for string comparison
-  (func $string_equals (param $str1_start i32) (param $str1_len i32) (param $str2_start i32) (param $str2_len i32) (result i32)
-    (local $i i32)
-
-    ;; Different lengths means not equal
-    (if (i32.ne (local.get $str1_len) (local.get $str2_len))
-      (then (return (i32.const 0)))
-    )
-
-    ;; Compare character by character
-    (local.set $i (i32.const 0))
-    (loop $compare_loop
-      (if (i32.ge_u (local.get $i) (local.get $str1_len))
-        (then (return (i32.const 1))) ;; All characters matched
-      )
-
-      (if (i32.ne
-            (i32.load8_u (i32.add (local.get $str1_start) (local.get $i)))
-            (i32.load8_u (i32.add (local.get $str2_start) (local.get $i)))
-          )
-        (then (return (i32.const 0))) ;; Characters don't match
-      )
-
-      (local.set $i (i32.add (local.get $i) (i32.const 1)))
-      (br $compare_loop)
-    )
-
-    (i32.const 1) ;; Should not reach here
-  )
-
-  ;; Check if identifier is a supported meta-function
-  (func $is_supported_meta_function (param $name_start i32) (param $name_len i32) (result i32)
-    ;; For now, support "size" and "type"
-    ;; TODO: Add string literals for comparison
-
-    ;; Simplified check - just return true for now
-    ;; In a real implementation, we'd compare against known meta-function names
-    (i32.const 1)
-  )
+  ;; Import expression utilities
+  (import "novo_parser_expression_utilities" "is_supported_meta_function" (func $is_supported_meta_function (param i32 i32) (result i32)))
 
   ;; Parse a traditional function call: identifier(arg1, arg2, ...)
-  (func $parse_function_call_inline (param $pos i32) (result i32 i32)
+  (func $parse_function_call_inline (export "parse_function_call_inline") (param $pos i32) (result i32 i32)
     (local $token_idx i32)
     (local $next_pos i32)
     (local $token_type i32)
@@ -209,7 +166,7 @@
   )
 
   ;; Parse a meta-function call: target::method_name(args...)
-  (func $parse_meta_call_inline (param $pos i32) (result i32 i32)
+  (func $parse_meta_call_inline (export "parse_meta_call_inline") (param $pos i32) (result i32 i32)
     (local $token_idx i32)
     (local $next_pos i32)
     (local $token_type i32)
@@ -359,7 +316,7 @@
   )
 
   ;; Parse a primary expression (literals, identifiers, parenthesized expressions)
-  (func $parse_primary (param $pos i32) (result i32 i32)
+  (func $parse_primary (export "parse_primary") (param $pos i32) (result i32 i32)
     (local $token_idx i32)
     (local $next_pos i32)
     (local $token_type i32)
@@ -411,59 +368,49 @@
 
     (if (i32.eq (local.get $token_type) (global.get $TOKEN_IDENTIFIER))
       (then
-        ;; Check if this is a function call (lookahead for parenthesis)
-        (local.set $temp_pos (local.get $next_pos))
-        (call $next_token (local.get $temp_pos))
-        (drop) ;; Ignore next position
-        (local.set $token_idx) ;; Get next token index
-        (local.set $token_type (call $get_token_type (local.get $token_idx)))
+        ;; Could be identifier, function call, or meta-function call
+        ;; Use lookahead to determine
 
-        (if (i32.eq (local.get $token_type) (global.get $TOKEN_LPAREN))
+        ;; Check for :: (meta-function call)
+        (call $next_token (local.get $next_pos))
+        (local.set $token_idx) ;; Get next token
+        (drop) ;; Drop position
+
+        (if (i32.eq (call $get_token_type (local.get $token_idx)) (global.get $TOKEN_META))
           (then
-            ;; This is a function call
-            (call $parse_function_call_inline (local.get $pos))
-            (local.set $next_pos)
-            (local.set $ast_node)
-            (return (local.get $ast_node) (local.get $next_pos))
+            ;; Meta-function call
+            (return (call $parse_meta_call_inline (local.get $pos)))
           )
         )
 
-        (if (i32.eq (local.get $token_type) (global.get $TOKEN_META))
+        ;; Check for ( (traditional function call)
+        (if (i32.eq (call $get_token_type (local.get $token_idx)) (global.get $TOKEN_LPAREN))
           (then
-            ;; This is a meta-function call
-            (call $parse_meta_call_inline (local.get $pos))
-            (local.set $next_pos)
-            (local.set $ast_node)
-            (return (local.get $ast_node) (local.get $next_pos))
+            ;; Traditional function call
+            (return (call $parse_function_call_inline (local.get $pos)))
           )
         )
 
-        ;; Simple identifier - restore original token info
-        (call $next_token (local.get $pos))
-        (local.set $next_pos)
-        (local.set $token_idx)
-        (local.set $ast_node
-          (call $create_expr_identifier
-            (call $get_token_start (local.get $token_idx))
-            (call $get_token_length (local.get $token_idx))))
+        ;; Simple identifier
+        (local.set $ast_node (call $create_expr_identifier (local.get $token_start) (call $get_token_length (local.get $token_idx))))
         (return (local.get $ast_node) (local.get $next_pos))
       )
     )
 
+    ;; Handle parenthesized expressions
     (if (i32.eq (local.get $token_type) (global.get $TOKEN_LPAREN))
       (then
-        ;; Parenthesized expression
+        ;; Parse inner expression
         (call $parse_expression (local.get $next_pos))
-        (local.set $ast_node)  ;; First return value
-        (local.set $next_pos)  ;; Second return value
+        (local.set $ast_node) ;; Get node
+        (local.set $temp_pos) ;; Get position
 
         ;; Expect closing parenthesis
-        (call $next_token (local.get $next_pos))
-        (local.set $token_idx) ;; First return value
-        (local.set $next_pos)  ;; Second return value
-        (local.set $token_type (call $get_token_type (local.get $token_idx)))
+        (call $next_token (local.get $temp_pos))
+        (local.set $token_idx) ;; Get token
+        (local.set $next_pos) ;; Get position
 
-        (if (i32.ne (local.get $token_type) (global.get $TOKEN_RPAREN))
+        (if (i32.ne (call $get_token_type (local.get $token_idx)) (global.get $TOKEN_RPAREN))
           (then
             ;; Error: expected closing parenthesis
             (return (i32.const 0) (local.get $next_pos))
@@ -474,12 +421,12 @@
       )
     )
 
-    ;; Error: unexpected token
+    ;; Error: unexpected token in primary expression
     (return (i32.const 0) (local.get $next_pos))
   )
 
   ;; Parse expression with precedence climbing
-  (func $parse_expression_prec (param $pos i32) (param $min_prec i32) (result i32 i32)
+  (func $parse_expression_prec (export "parse_expression_prec") (param $pos i32) (param $min_prec i32) (result i32 i32)
     (local $left_node i32)
     (local $right_node i32)
     (local $token_idx i32)

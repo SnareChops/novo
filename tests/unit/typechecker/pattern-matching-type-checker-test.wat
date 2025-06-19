@@ -5,11 +5,11 @@
   ;; Import memory
   (import "lexer_memory" "memory" (memory 1))
 
-  ;; Import pattern type checker functions
-  (import "typechecker_patterns" "check_match_statement" (func $check_match_statement (param i32) (result i32)))
-  (import "typechecker_patterns" "check_pattern" (func $check_pattern (param i32 i32) (result i32)))
-  (import "typechecker_patterns" "check_pattern_guard" (func $check_pattern_guard (param i32) (result i32)))
-  (import "typechecker_patterns" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
+  ;; Import typechecker functions
+  (import "typechecker_pattern_matching" "check_match_statement" (func $check_match_statement (param i32) (result i32)))
+  (import "typechecker_pattern_matching" "check_pattern" (func $check_pattern (param i32 i32) (result i32)))
+  (import "typechecker_pattern_validation" "check_pattern_guard" (func $check_pattern_guard (param i32) (result i32)))
+  (import "typechecker_pattern_validation" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
 
   ;; Import type checker infrastructure
   (import "typechecker_main" "reset_type_checker" (func $reset_type_checker))
@@ -21,8 +21,8 @@
   (import "typechecker_main" "TYPE_STRING" (global $TYPE_STRING i32))
 
   ;; Import AST creation functions for testing
-  (import "ast_node_creators" "create_ctrl_match" (func $create_ctrl_match (param i32 i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_integer_literal" (func $create_integer_literal (param i64) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_match" (func $create_ctrl_match (param i32 i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_integer_literal" (func $create_integer_literal (param i64) (result i32)))
 
   ;; Import AST memory
   (import "ast_memory" "init_memory_manager" (func $init_memory_manager))

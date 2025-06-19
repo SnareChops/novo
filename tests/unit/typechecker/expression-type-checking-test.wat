@@ -20,13 +20,13 @@
   (import "typechecker_expressions" "refine_literal_type" (func $refine_literal_type (param i32 i32) (result i32)))
 
   ;; Import AST functions for creating test nodes
-  (import "ast_node_creators" "create_expr_integer_literal" (func $create_integer_literal (param i64) (result i32)))
-  (import "ast_node_creators" "create_expr_float_literal" (func $create_float_literal (param f64) (result i32)))
-  (import "ast_node_creators" "create_expr_string_literal" (func $create_string_literal (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_bool_literal" (func $create_bool_literal (param i32) (result i32)))
-  (import "ast_node_creators" "create_expr_add" (func $create_binary_expr (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_mul" (func $create_mul_expr (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_identifier" (func $create_identifier_expr (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_integer_literal" (func $create_integer_literal (param i64) (result i32)))
+  (import "ast_expression_creators" "create_expr_float_literal" (func $create_float_literal (param f64) (result i32)))
+  (import "ast_expression_creators" "create_expr_string_literal" (func $create_string_literal (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_bool_literal" (func $create_bool_literal (param i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_add" (func $create_binary_expr (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_mul" (func $create_mul_expr (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_identifier" (func $create_identifier_expr (param i32 i32) (result i32)))
 
   ;; Import AST node type constants
   (import "ast_node_types" "EXPR_ADD" (global $EXPR_ADD i32))
@@ -35,19 +35,19 @@
   (import "ast_node_types" "EXPR_DIV" (global $EXPR_DIV i32))
   (import "ast_node_types" "EXPR_MOD" (global $EXPR_MOD i32))
 
+  ;; Import type constants from typechecker_main
+  (import "typechecker_main" "TYPE_UNKNOWN" (global $TYPE_UNKNOWN i32))
+  (import "typechecker_main" "TYPE_ERROR" (global $TYPE_ERROR i32))
+  (import "typechecker_main" "TYPE_I32" (global $TYPE_I32 i32))
+  (import "typechecker_main" "TYPE_I64" (global $TYPE_I64 i32))
+  (import "typechecker_main" "TYPE_F32" (global $TYPE_F32 i32))
+  (import "typechecker_main" "TYPE_F64" (global $TYPE_F64 i32))
+  (import "typechecker_main" "TYPE_BOOL" (global $TYPE_BOOL i32))
+  (import "typechecker_main" "TYPE_STRING" (global $TYPE_STRING i32))
+
   ;; Global test counters
   (global $test_count (mut i32) (i32.const 0))
   (global $pass_count (mut i32) (i32.const 0))
-
-  ;; Type constants (should match typechecker_main)
-  (global $TYPE_UNKNOWN i32 (i32.const 0))
-  (global $TYPE_ERROR i32 (i32.const 1))
-  (global $TYPE_I32 i32 (i32.const 2))
-  (global $TYPE_I64 i32 (i32.const 3))
-  (global $TYPE_F32 i32 (i32.const 4))
-  (global $TYPE_F64 i32 (i32.const 5))
-  (global $TYPE_BOOL i32 (i32.const 6))
-  (global $TYPE_STRING i32 (i32.const 7))
 
   ;; Test data section for string literals
   (data (i32.const 1000) "hello")

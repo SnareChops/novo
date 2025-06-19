@@ -25,14 +25,14 @@
   (import "lexer_tokens" "TOKEN_RBRACE" (global $TOKEN_RBRACE i32))
 
   ;; Import AST control flow node creators
-  (import "ast_node_creators" "create_ctrl_if" (func $create_ctrl_if (param i32 i32 i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_while" (func $create_ctrl_while (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_return" (func $create_ctrl_return (param i32) (result i32)))
-  (import "ast_node_creators" "create_ctrl_break" (func $create_ctrl_break (result i32)))
-  (import "ast_node_creators" "create_ctrl_continue" (func $create_ctrl_continue (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_if" (func $create_ctrl_if (param i32 i32 i32) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_while" (func $create_ctrl_while (param i32 i32) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_return" (func $create_ctrl_return (param i32) (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_break" (func $create_ctrl_break (result i32)))
+  (import "ast_control_flow_creators" "create_ctrl_continue" (func $create_ctrl_continue (result i32)))
 
   ;; Import expression parsing (for conditions and return values) - TODO: temporarily disabled
-  ;; (import "parser_expression_core" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
+  (import "parser_expression_parsing" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
 
   ;; Import utility functions
   (import "parser_utils" "get_token_type" (func $get_token_type (param i32) (result i32)))

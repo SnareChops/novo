@@ -16,9 +16,9 @@
   (import "lexer_tokens" "TOKEN_RPAREN" (global $TOKEN_RPAREN i32))
   (import "lexer_tokens" "TOKEN_COMMA" (global $TOKEN_COMMA i32))
 
-  ;; Import AST node creators
-  (import "ast_node_creators" "create_expr_meta_call" (func $create_expr_meta_call (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
+  ;; Import AST expression creators
+  (import "ast_expression_creators" "create_expr_meta_call" (func $create_expr_meta_call (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
 
   ;; Import AST core functions
   (import "ast_node_core" "add_child" (func $add_child (param i32 i32) (result i32)))
@@ -29,7 +29,7 @@
   (import "parser_utils" "get_token_length" (func $get_token_length (param i32) (result i32)))
 
   ;; Import expression parser for arguments
-  (import "parser_expression_core" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
+  (import "parser_expression_parsing" "parse_expression" (func $parse_expression (param i32) (result i32 i32)))
 
   ;; Memory helpers for string comparison
   (func $string_equals (param $str1_start i32) (param $str1_len i32) (param $str2_start i32) (param $str2_len i32) (result i32)

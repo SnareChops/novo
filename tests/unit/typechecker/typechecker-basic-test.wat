@@ -16,19 +16,19 @@
   (import "typechecker_main" "exit_scope" (func $exit_scope))
   (import "typechecker_main" "reset_type_checker" (func $reset_type_checker))
 
+  ;; Import type constants from typechecker_main
+  (import "typechecker_main" "TYPE_UNKNOWN" (global $TYPE_UNKNOWN i32))
+  (import "typechecker_main" "TYPE_ERROR" (global $TYPE_ERROR i32))
+  (import "typechecker_main" "TYPE_I32" (global $TYPE_I32 i32))
+  (import "typechecker_main" "TYPE_I64" (global $TYPE_I64 i32))
+  (import "typechecker_main" "TYPE_F32" (global $TYPE_F32 i32))
+  (import "typechecker_main" "TYPE_F64" (global $TYPE_F64 i32))
+  (import "typechecker_main" "TYPE_BOOL" (global $TYPE_BOOL i32))
+  (import "typechecker_main" "TYPE_STRING" (global $TYPE_STRING i32))
+
   ;; Global test counters
   (global $test_count (mut i32) (i32.const 0))
   (global $pass_count (mut i32) (i32.const 0))
-
-  ;; Type constants (should match typechecker_main)
-  (global $TYPE_UNKNOWN i32 (i32.const 0))
-  (global $TYPE_ERROR i32 (i32.const 1))
-  (global $TYPE_I32 i32 (i32.const 2))
-  (global $TYPE_I64 i32 (i32.const 3))
-  (global $TYPE_F32 i32 (i32.const 4))
-  (global $TYPE_F64 i32 (i32.const 5))
-  (global $TYPE_BOOL i32 (i32.const 6))
-  (global $TYPE_STRING i32 (i32.const 7))
 
   ;; Helper function to run a test
   (func $run_test (param $test_name_start i32) (param $test_name_len i32) (param $test_func i32) (result i32)

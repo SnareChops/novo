@@ -15,9 +15,9 @@
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
 
   ;; Import node creator functions
-  (import "ast_node_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
-  (import "ast_node_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
-  (import "ast_node_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
+  (import "ast_type_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
+  (import "ast_expression_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
 
   ;; Import node type constants
   (import "ast_node_types" "TYPE_PRIMITIVE" (global $TYPE_PRIMITIVE i32))
