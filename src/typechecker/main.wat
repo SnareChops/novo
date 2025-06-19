@@ -33,6 +33,16 @@
   (global $TYPE_BOOL i32 (i32.const 6))
   (global $TYPE_STRING i32 (i32.const 7))
 
+  ;; Export type constants for use by other modules
+  (export "TYPE_UNKNOWN" (global $TYPE_UNKNOWN))
+  (export "TYPE_ERROR" (global $TYPE_ERROR))
+  (export "TYPE_I32" (global $TYPE_I32))
+  (export "TYPE_I64" (global $TYPE_I64))
+  (export "TYPE_F32" (global $TYPE_F32))
+  (export "TYPE_F64" (global $TYPE_F64))
+  (export "TYPE_BOOL" (global $TYPE_BOOL))
+  (export "TYPE_STRING" (global $TYPE_STRING))
+
   ;; Type information table - maps AST nodes to types
   ;; Memory layout: [node_ptr: i32][type_id: i32]
   (global $TYPE_TABLE_START i32 (i32.const 8192))

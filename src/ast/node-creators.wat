@@ -606,6 +606,41 @@
     (call $create_node (global.get $CTRL_CONTINUE) (i32.const 0))
   )
 
+  ;; Create a match control flow node
+  ;; @param $expression i32 - Pointer to expression being matched
+  ;; @param $then_block i32 - Pointer to match arms block (optional)
+  ;; @param $else_block i32 - Pointer to else block (optional)
+  ;; @returns i32 - Pointer to new match node
+  (func $create_ctrl_match (export "create_ctrl_match") (param $expression i32) (param $then_block i32) (param $else_block i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with no additional data
+    (local.set $node
+      (call $create_node
+        (global.get $CTRL_MATCH)
+        (i32.const 0)))
+
+    ;; If allocation successful, add children
+    (if (local.get $node)
+      (then
+        ;; Add expression as first child
+        (if (local.get $expression)
+          (then
+            (drop (call $add_child (local.get $node) (local.get $expression)))))
+
+        ;; Add then block as second child (if provided)
+        (if (local.get $then_block)
+          (then
+            (drop (call $add_child (local.get $node) (local.get $then_block)))))
+
+        ;; Add else block as third child (if provided)
+        (if (local.get $else_block)
+          (then
+            (drop (call $add_child (local.get $node) (local.get $else_block)))))))
+
+    (local.get $node)
+  )
+
   ;; Pattern Matching Node Creators
 
   ;; Create match statement node
@@ -651,9 +686,37 @@
     (local.get $node)
   )
 
+  ;; Create control flow match arm node
+  ;; @param $pattern i32 - Pointer to pattern node
+  ;; @param $body i32 - Pointer to body node
+  ;; @returns i32 - Pointer to new match arm node
+  (func $create_ctrl_match_arm (export "create_ctrl_match_arm") (param $pattern i32) (param $body i32) (result i32)
+    (local $node i32)
+
+    ;; Create base node with no additional data
+    (local.set $node
+      (call $create_node
+        (global.get $CTRL_MATCH_ARM)
+        (i32.const 0)))
+
+    ;; If allocation successful, add children
+    (if (local.get $node)
+      (then
+        ;; Add pattern as first child
+        (if (local.get $pattern)
+          (then
+            (drop (call $add_child (local.get $node) (local.get $pattern)))))
+
+        ;; Add body as second child
+        (if (local.get $body)
+          (then
+            (drop (call $add_child (local.get $node) (local.get $body)))))))
+
+    (local.get $node)
+  )
+
   ;; Create pattern literal node
   ;; @param $pattern_type i32 - Pattern type constant
-  ;; @param $token_pos i32 - Position of literal token
   ;; @returns i32 - Pointer to new node
   (func $create_pattern_literal_node (export "create_pattern_literal_node") (param $pattern_type i32) (param $token_pos i32) (result i32)
     (local $node i32)
@@ -757,6 +820,50 @@
         (i32.store
           (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET))
           (local.get $inner_pattern))))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern literal node
+  ;; @param $pattern_type i32 - Pattern type constant
+  ;; @returns i32 - Pointer to new pattern literal node
+  (func $create_pat_literal (export "create_pat_literal") (param $pattern_type i32) (result i32)
+    (local $node i32)
+
+    ;; Create base pattern node
+    (local.set $node
+      (call $create_node
+        (local.get $pattern_type)
+        (i32.const 0)))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern variable node
+  ;; @param $pattern_type i32 - Pattern type constant
+  ;; @returns i32 - Pointer to new pattern variable node
+  (func $create_pat_variable (export "create_pat_variable") (param $pattern_type i32) (result i32)
+    (local $node i32)
+
+    ;; Create base pattern node
+    (local.set $node
+      (call $create_node
+        (local.get $pattern_type)
+        (i32.const 0)))
+
+    (local.get $node)
+  )
+
+  ;; Create pattern wildcard node
+  ;; @returns i32 - Pointer to new pattern wildcard node
+  (func $create_pat_wildcard (export "create_pat_wildcard") (result i32)
+    (local $node i32)
+
+    ;; Create wildcard pattern node
+    (local.set $node
+      (call $create_node
+        (global.get $PAT_WILDCARD)
+        (i32.const 0)))
 
     (local.get $node)
   )

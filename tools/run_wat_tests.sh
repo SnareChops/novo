@@ -71,6 +71,7 @@ build_modules=(
   # Type checker modules
   "typechecker/main:typechecker-main"
   "typechecker/expressions:typechecker-expressions"
+  "typechecker/patterns:typechecker-patterns"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -207,9 +208,10 @@ for test in "${test_files[@]}"; do
 
     # Check if this is a typechecker test and add required modules
     typechecker_preload_args=()
-    if [[ "$test_name" == *"typechecker"* || "$test_name" == *"type-checking"* ]]; then
+    if [[ "$test_name" == *"typechecker"* || "$test_name" == *"type-checking"* || "$test_name" == *"type-checker"* ]]; then
       typechecker_preload_args+=("--preload" "typechecker_main=typechecker-main.wasm")
       typechecker_preload_args+=("--preload" "typechecker_expressions=typechecker-expressions.wasm")
+      typechecker_preload_args+=("--preload" "typechecker_patterns=typechecker-patterns.wasm")
     fi
 
     # Capture both stdout and stderr
