@@ -205,4 +205,14 @@
 
     ;; Not found
     (i32.const 0))
+
+  ;; Get node value (first 4 bytes of node data)
+  ;; @param $node i32 - Pointer to node
+  ;; @returns i32 - Value stored in node data (0 if invalid node)
+  (func $get_node_value (export "get_node_value") (param $node i32) (result i32)
+    (if (i32.eqz (local.get $node))
+      (then (return (i32.const 0))))
+
+    ;; Load value from node data section
+    (i32.load offset=16 (local.get $node)))
 )

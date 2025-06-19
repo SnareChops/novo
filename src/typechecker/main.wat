@@ -33,6 +33,16 @@
   (global $TYPE_BOOL i32 (i32.const 6))
   (global $TYPE_STRING i32 (i32.const 7))
 
+  ;; Additional numeric types for meta functions
+  (global $TYPE_U8 i32 (i32.const 8))
+  (global $TYPE_U16 i32 (i32.const 9))
+  (global $TYPE_U32 i32 (i32.const 10))
+  (global $TYPE_U64 i32 (i32.const 11))
+  (global $TYPE_S8 i32 (i32.const 12))
+  (global $TYPE_S16 i32 (i32.const 13))
+  (global $TYPE_S32 i32 (i32.const 14))
+  (global $TYPE_S64 i32 (i32.const 15))
+
   ;; Export type constants for use by other modules
   (export "TYPE_UNKNOWN" (global $TYPE_UNKNOWN))
   (export "TYPE_ERROR" (global $TYPE_ERROR))
@@ -42,6 +52,14 @@
   (export "TYPE_F64" (global $TYPE_F64))
   (export "TYPE_BOOL" (global $TYPE_BOOL))
   (export "TYPE_STRING" (global $TYPE_STRING))
+  (export "TYPE_U8" (global $TYPE_U8))
+  (export "TYPE_U16" (global $TYPE_U16))
+  (export "TYPE_U32" (global $TYPE_U32))
+  (export "TYPE_U64" (global $TYPE_U64))
+  (export "TYPE_S8" (global $TYPE_S8))
+  (export "TYPE_S16" (global $TYPE_S16))
+  (export "TYPE_S32" (global $TYPE_S32))
+  (export "TYPE_S64" (global $TYPE_S64))
 
   ;; Type information table - maps AST nodes to types
   ;; Memory layout: [node_ptr: i32][type_id: i32]
@@ -365,4 +383,7 @@
     (global.set $symbol_table_count (i32.const 0))
     (global.set $current_scope_level (i32.const 0))
   )
+
+  ;; Export alias for meta-functions compatibility
+  (export "get_node_stored_type" (func $get_node_type_info))
 )

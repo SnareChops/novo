@@ -85,6 +85,14 @@ build_modules=(
   # Split typechecker pattern modules
   "typechecker/pattern-matching:typechecker-pattern-matching"
   "typechecker/pattern-validation:typechecker-pattern-validation"
+
+  # Meta functions modules (depend on type checker and AST)
+  "meta-functions/core:meta-functions-core"
+  "meta-functions/numeric:meta-functions-numeric"
+  "meta-functions/memory:meta-functions-memory"
+  "meta-functions/record:meta-functions-record"
+  "meta-functions/resource:meta-functions-resource"
+  "meta-functions/main:meta-functions-main"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -154,6 +162,13 @@ preloads=(
   # Split typechecker pattern modules
   "typechecker_pattern_matching=typechecker-pattern-matching.wasm"
   "typechecker_pattern_validation=typechecker-pattern-validation.wasm"
+  # Meta functions modules (depend on typechecker and AST)
+  "meta_functions_core=meta-functions-core.wasm"
+  "meta_functions_numeric=meta-functions-numeric.wasm"
+  "meta_functions_memory=meta-functions-memory.wasm"
+  "meta_functions_record=meta-functions-record.wasm"
+  "meta_functions_resource=meta-functions-resource.wasm"
+  "meta_functions_main=meta-functions-main.wasm"
 )
 preload_args=()
 for preload in "${preloads[@]}"; do
@@ -203,6 +218,7 @@ else
     $(find . -path './ast/*' -name '*-test.wasm' | sort)
     $(find . -path './parser/*' -name '*-test.wasm' | sort)
     $(find . -path './typechecker/*' -name '*-test.wasm' | sort)
+    $(find . -path './meta-functions/*' -name '*-test.wasm' | sort)
   )
 fi
 
