@@ -262,4 +262,19 @@
     (i32.store8 offset=45069 (i32.const 0) (i32.const 54))  ;; '6'
     (i32.store8 offset=45070 (i32.const 0) (i32.const 52))  ;; '4'
   )
+
+  ;; Global for tracking current function return type
+  (global $current_function_return_type (mut i32) (i32.const 0))
+
+  ;; Get the return type of the current function being generated
+  ;; @returns i32 - Type ID of the current function's return type
+  (func $get_current_function_return_type (export "get_current_function_return_type") (result i32)
+    (global.get $current_function_return_type)
+  )
+
+  ;; Set the return type of the current function being generated
+  ;; @param return_type: i32 - Type ID of the function's return type
+  (func $set_current_function_return_type (export "set_current_function_return_type") (param $return_type i32)
+    (global.set $current_function_return_type (local.get $return_type))
+  )
 )

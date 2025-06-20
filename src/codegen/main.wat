@@ -27,6 +27,9 @@
   (import "codegen_control_flow" "generate_control_flow" (func $generate_control_flow (param i32) (result i32)))
   (import "codegen_patterns" "generate_pattern_matching" (func $generate_pattern_matching (param i32) (result i32)))
   (import "codegen_patterns" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
+  (import "codegen_error_handling" "has_error_propagation_pattern" (func $has_error_propagation_pattern (param i32) (result i32)))
+  (import "codegen_error_handling" "generate_error_propagation_match" (func $generate_error_propagation_match (param i32) (result i32)))
+  (import "codegen_error_handling" "validate_error_propagation" (func $validate_error_propagation (param i32) (result i32)))
 
   ;; Import AST for tree traversal
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
@@ -116,8 +119,25 @@
                       ;; For now, continue but this should ideally be handled
                     ))
 
-                  ;; Generate pattern matching code
-                  (local.set $success (call $generate_pattern_matching (local.get $child_node)))
+                  ;; Check if this match contains error propagation patterns
+                  (if (call $has_error_propagation_pattern (local.get $child_node))
+                    (then
+                      ;; Validate error propagation is correct
+                      (if (call $validate_error_propagation (local.get $child_node))
+                        (then
+                          ;; Generate error propagation code
+                          (local.set $success (call $generate_error_propagation_match (local.get $child_node)))
+                        )
+                        (else
+                          ;; Invalid error propagation - should report error
+                          (local.set $success (i32.const 0))
+                        ))
+                    )
+                    (else
+                      ;; Generate regular pattern matching code
+                      (local.set $success (call $generate_pattern_matching (local.get $child_node)))
+                    ))
+
                   (if (i32.eqz (local.get $success))
                     (then (return (i32.const 0))))
                 )

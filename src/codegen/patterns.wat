@@ -57,6 +57,32 @@
   (global $PATTERN_BUFFER_SIZE i32 (i32.const 2048))
   (global $pattern_buffer_pos (mut i32) (i32.const 0))
 
+  ;; String constants for pattern matching code generation
+  (data (i32.const 0x8000) "(block $match_")      ;; 0x8000-0x800E
+  (data (i32.const 0x8010) "\n")                   ;; 0x8010
+  (data (i32.const 0x8020) "    unreachable\n")   ;; 0x8020-0x802E
+  (data (i32.const 0x8030) "  )\n")                ;; 0x8030-0x8033
+  (data (i32.const 0x8040) "    (block $arm_")     ;; 0x8040-0x804F
+  (data (i32.const 0x8050) "      local.get $match_val\n")  ;; 0x8050-0x8069
+  (data (i32.const 0x8060) "      br $match_")     ;; 0x8060-0x806E
+  (data (i32.const 0x8070) "    )\n")              ;; 0x8070-0x8073
+  (data (i32.const 0x8080) "      i32.const 42\n") ;; 0x8080-0x8091
+  (data (i32.const 0x8090) "      i32.ne\n")       ;; 0x8090-0x809A
+  (data (i32.const 0x80A0) "      br_if $arm_")    ;; 0x80A0-0x80AF
+  (data (i32.const 0x80B0) "      ;; Variable pattern binding\n")  ;; 0x80B0-0x80D0
+  (data (i32.const 0x80C0) "      local.set $pattern_var\n")  ;; 0x80C0-0x80DB
+  (data (i32.const 0x80D0) "      i32.add\n")      ;; 0x80D0-0x80D8
+  (data (i32.const 0x80E0) "      i32.const 4\n")  ;; 0x80E0-0x80ED
+  (data (i32.const 0x80F0) "      i32.load\n")     ;; 0x80F0-0x80FD
+  (data (i32.const 0x8100) "      i32.const 1\n")  ;; 0x8100-0x8110
+  (data (i32.const 0x8110) "      i32.ne\n")       ;; 0x8110-0x811A
+  (data (i32.const 0x8120) "      if\n")           ;; 0x8120-0x8127
+  (data (i32.const 0x8130) "      else\n")         ;; 0x8130-0x8139
+  (data (i32.const 0x8140) "      end\n")          ;; 0x8140-0x8149
+  (data (i32.const 0x8150) "      ;; Test for Ok result\n")  ;; 0x8150-0x816A
+  (data (i32.const 0x8160) "      ;; Test inner Ok pattern\n")  ;; 0x8160-0x817E
+  (data (i32.const 0x8190) "0")                    ;; 0x8190
+
   ;; Generate code for pattern matching constructs
   ;; @param pattern_node: i32 - AST node pointer for the pattern matching construct
   ;; @returns i32 - Success (1) or failure (0)
@@ -124,11 +150,11 @@
 
     ;; Start match block with label
     (local.set $result (call $write_output
-      (i32.const 0x10000)  ;; "(block $match_"
+      (i32.const 0x8000)  ;; "(block $match_"
       (i32.const 12)))
     (local.set $result (call $write_match_label (local.get $match_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     ;; Generate code for each match arm
@@ -157,12 +183,12 @@
 
     ;; If no patterns matched, generate unreachable (should be caught by exhaustiveness checking)
     (local.set $result (call $write_output
-      (i32.const 0x10020)  ;; "    unreachable\n"
+      (i32.const 0x8020)  ;; "    unreachable\n"
       (i32.const 15)))
 
     ;; End match block
     (local.set $result (call $write_output
-      (i32.const 0x10030)  ;; "  )\n"
+      (i32.const 0x8030)  ;; "  )\n"
       (i32.const 4)))
 
     ;; Pop the match value from stack
@@ -202,16 +228,16 @@
 
     ;; Start arm block
     (local.set $result (call $write_output
-      (i32.const 0x10040)  ;; "    (block $arm_"
+      (i32.const 0x8040)  ;; "    (block $arm_"
       (i32.const 15)))
     (local.set $result (call $write_arm_label (local.get $arm_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     ;; Generate pattern test (duplicate match value on stack for testing)
     (local.set $result (call $write_output
-      (i32.const 0x10050)  ;; "      local.get $match_val\n"
+      (i32.const 0x8050)  ;; "      local.get $match_val\n"
       (i32.const 26)))
 
     ;; Generate pattern matching logic
@@ -232,16 +258,16 @@
 
     ;; Break out of match after successful arm
     (local.set $result (call $write_output
-      (i32.const 0x10060)  ;; "      br $match_"
+      (i32.const 0x8060)  ;; "      br $match_"
       (i32.const 15)))
     (local.set $result (call $write_match_label (local.get $match_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     ;; End arm block
     (local.set $result (call $write_output
-      (i32.const 0x10070)  ;; "    )\n"
+      (i32.const 0x8070)  ;; "    )\n"
       (i32.const 6)))
 
     (i32.const 1)
@@ -329,21 +355,21 @@
     ;; Generate literal value for comparison
     ;; TODO: This should generate the actual literal value based on token
     (local.set $result (call $write_output
-      (i32.const 0x10080)  ;; "      i32.const 42\n"  ;; Placeholder literal
+      (i32.const 0x8080)  ;; "      i32.const 42\n"  ;; Placeholder literal
       (i32.const 19)))
 
     ;; Compare with match value
     (local.set $result (call $write_output
-      (i32.const 0x10090)  ;; "      i32.ne\n"
+      (i32.const 0x8090)  ;; "      i32.ne\n"
       (i32.const 13)))
 
     ;; Break to next arm if not equal
     (local.set $result (call $write_output
-      (i32.const 0x100A0)  ;; "      br_if $arm_"
+      (i32.const 0x80A0)  ;; "      br_if $arm_"
       (i32.const 17)))
     (local.set $result (call $write_arm_label (local.get $arm_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     (i32.const 1)
@@ -363,12 +389,12 @@
     ;; Variable patterns always match - just bind the value
     ;; TODO: Generate proper variable binding code
     (local.set $result (call $write_output
-      (i32.const 0x100B0)  ;; "      ;; Variable pattern binding\n"
+      (i32.const 0x80B0)  ;; "      ;; Variable pattern binding\n"
       (i32.const 35)))
 
     ;; Store match value in local variable
     (local.set $result (call $write_output
-      (i32.const 0x100C0)  ;; "      local.set $pattern_var\n"
+      (i32.const 0x80C0)  ;; "      local.set $pattern_var\n"
       (i32.const 29)))
 
     (i32.const 1)
@@ -383,7 +409,7 @@
 
     ;; Wildcard patterns always match - no additional code needed
     (local.set $result (call $write_output
-      (i32.const 0x100D0)  ;; "      ;; Wildcard pattern (always matches)\n"
+      (i32.const 0x80D0)  ;; "      ;; Wildcard pattern (always matches)\n"
       (i32.const 44)))
 
     (i32.const 1)
@@ -399,29 +425,29 @@
 
     ;; Test if option is Some (tag = 1)
     (local.set $result (call $write_output
-      (i32.const 0x100E0)  ;; "      ;; Test for Some option\n"
+      (i32.const 0x80E0)  ;; "      ;; Test for Some option\n"
       (i32.const 29)))
 
     ;; Load option tag (first 4 bytes)
     (local.set $result (call $write_output
-      (i32.const 0x100F0)  ;; "      i32.load\n"
+      (i32.const 0x80F0)  ;; "      i32.load\n"
       (i32.const 15)))
 
     ;; Compare with Some tag (1)
     (local.set $result (call $write_output
-      (i32.const 0x10100)  ;; "      i32.const 1\n"
+      (i32.const 0x8100)  ;; "      i32.const 1\n"
       (i32.const 17)))
     (local.set $result (call $write_output
-      (i32.const 0x10110)  ;; "      i32.ne\n"
+      (i32.const 0x8110)  ;; "      i32.ne\n"
       (i32.const 13)))
 
     ;; Break to next arm if not Some
     (local.set $result (call $write_output
-      (i32.const 0x100A0)  ;; "      br_if $arm_"
+      (i32.const 0x80A0)  ;; "      br_if $arm_"
       (i32.const 17)))
     (local.set $result (call $write_arm_label (local.get $arm_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     ;; TODO: Generate code for inner pattern if it exists
@@ -430,7 +456,7 @@
       (then
         ;; Load option value and test inner pattern
         (local.set $result (call $write_output
-          (i32.const 0x10120)  ;; "      ;; Test inner pattern\n"
+          (i32.const 0x8120)  ;; "      ;; Test inner pattern\n"
           (i32.const 27)))
       )
     )
@@ -447,29 +473,29 @@
 
     ;; Test if option is None (tag = 0)
     (local.set $result (call $write_output
-      (i32.const 0x10130)  ;; "      ;; Test for None option\n"
+      (i32.const 0x8130)  ;; "      ;; Test for None option\n"
       (i32.const 29)))
 
     ;; Load option tag (first 4 bytes)
     (local.set $result (call $write_output
-      (i32.const 0x100F0)  ;; "      i32.load\n"
+      (i32.const 0x80F0)  ;; "      i32.load\n"
       (i32.const 15)))
 
     ;; Compare with None tag (0)
     (local.set $result (call $write_output
-      (i32.const 0x10140)  ;; "      i32.const 0\n"
+      (i32.const 0x8140)  ;; "      i32.const 0\n"
       (i32.const 17)))
     (local.set $result (call $write_output
-      (i32.const 0x10110)  ;; "      i32.ne\n"
+      (i32.const 0x8110)  ;; "      i32.ne\n"
       (i32.const 13)))
 
     ;; Break to next arm if not None
     (local.set $result (call $write_output
-      (i32.const 0x100A0)  ;; "      br_if $arm_"
+      (i32.const 0x80A0)  ;; "      br_if $arm_"
       (i32.const 17)))
     (local.set $result (call $write_arm_label (local.get $arm_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     (i32.const 1)
@@ -485,29 +511,29 @@
 
     ;; Test if result is Ok (tag = 1)
     (local.set $result (call $write_output
-      (i32.const 0x10150)  ;; "      ;; Test for Ok result\n"
+      (i32.const 0x8150)  ;; "      ;; Test for Ok result\n"
       (i32.const 27)))
 
     ;; Load result tag (first 4 bytes)
     (local.set $result (call $write_output
-      (i32.const 0x100F0)  ;; "      i32.load\n"
+      (i32.const 0x80F0)  ;; "      i32.load\n"
       (i32.const 15)))
 
     ;; Compare with Ok tag (1)
     (local.set $result (call $write_output
-      (i32.const 0x10100)  ;; "      i32.const 1\n"
+      (i32.const 0x8100)  ;; "      i32.const 1\n"
       (i32.const 17)))
     (local.set $result (call $write_output
-      (i32.const 0x10110)  ;; "      i32.ne\n"
+      (i32.const 0x8110)  ;; "      i32.ne\n"
       (i32.const 13)))
 
     ;; Break to next arm if not Ok
     (local.set $result (call $write_output
-      (i32.const 0x100A0)  ;; "      br_if $arm_"
+      (i32.const 0x80A0)  ;; "      br_if $arm_"
       (i32.const 17)))
     (local.set $result (call $write_arm_label (local.get $arm_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     ;; TODO: Generate code for inner pattern if it exists
@@ -516,7 +542,7 @@
       (then
         ;; Load result value and test inner pattern
         (local.set $result (call $write_output
-          (i32.const 0x10160)  ;; "      ;; Test inner Ok pattern\n"
+          (i32.const 0x8160)  ;; "      ;; Test inner Ok pattern\n"
           (i32.const 31)))
       )
     )
@@ -539,24 +565,24 @@
 
     ;; Load result tag (first 4 bytes)
     (local.set $result (call $write_output
-      (i32.const 0x100F0)  ;; "      i32.load\n"
+      (i32.const 0x80F0)  ;; "      i32.load\n"
       (i32.const 15)))
 
     ;; Compare with Error tag (0)
     (local.set $result (call $write_output
-      (i32.const 0x10140)  ;; "      i32.const 0\n"
+      (i32.const 0x8140)  ;; "      i32.const 0\n"
       (i32.const 17)))
     (local.set $result (call $write_output
-      (i32.const 0x10110)  ;; "      i32.ne\n"
+      (i32.const 0x8110)  ;; "      i32.ne\n"
       (i32.const 13)))
 
     ;; Break to next arm if not Error
     (local.set $result (call $write_output
-      (i32.const 0x100A0)  ;; "      br_if $arm_"
+      (i32.const 0x80A0)  ;; "      br_if $arm_"
       (i32.const 17)))
     (local.set $result (call $write_arm_label (local.get $arm_label)))
     (local.set $result (call $write_output
-      (i32.const 0x10010)  ;; "\n"
+      (i32.const 0x8010)  ;; "\n"
       (i32.const 1)))
 
     ;; TODO: Generate code for inner pattern if it exists
@@ -579,7 +605,7 @@
   (func $write_match_label (param $label i32) (result i32)
     ;; TODO: Convert label number to string and write
     ;; For now, write a placeholder
-    (call $write_output (i32.const 0x10190) (i32.const 1))  ;; "0"
+    (call $write_output (i32.const 0x8190) (i32.const 1))  ;; "0"
   )
 
   ;; Utility function to write arm label
@@ -588,7 +614,7 @@
   (func $write_arm_label (param $label i32) (result i32)
     ;; TODO: Convert label number to string and write
     ;; For now, write a placeholder
-    (call $write_output (i32.const 0x10190) (i32.const 1))  ;; "0"
+    (call $write_output (i32.const 0x8190) (i32.const 1))  ;; "0"
   )
 
   ;; Check if match statement is exhaustive (basic implementation)
