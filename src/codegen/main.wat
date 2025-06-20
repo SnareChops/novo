@@ -23,6 +23,11 @@
   (import "codegen_stack" "generate_stack_validation" (func $generate_stack_validation (result i32)))
   (import "codegen_stack" "validate_stack_balance" (func $validate_stack_balance (result i32)))
 
+  (import "codegen_expressions" "generate_expression" (func $generate_expression (param i32) (result i32)))
+  (import "codegen_control_flow" "generate_control_flow" (func $generate_control_flow (param i32) (result i32)))
+  (import "codegen_patterns" "generate_pattern_matching" (func $generate_pattern_matching (param i32) (result i32)))
+  (import "codegen_patterns" "check_exhaustiveness" (func $check_exhaustiveness (param i32) (result i32)))
+
   ;; Import AST for tree traversal
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
   (import "ast_node_core" "get_child_count" (func $get_child_count (param i32) (result i32)))
@@ -30,6 +35,8 @@
 
   ;; Import AST node types
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
+  (import "ast_node_types" "CTRL_MATCH" (global $CTRL_MATCH i32))
+  (import "ast_node_types" "EXPR_BLOCK" (global $EXPR_BLOCK i32))
 
   ;; Code generation statistics
   (global $functions_generated (mut i32) (i32.const 0))
@@ -97,7 +104,33 @@
 
               ;; Increment function count
               (global.set $functions_generated (i32.add (global.get $functions_generated) (i32.const 1)))
-            ))
+            )
+            (else
+              ;; Check if this is a pattern matching construct
+              (if (i32.eq (local.get $node_type) (global.get $CTRL_MATCH))
+                (then
+                  ;; Check exhaustiveness first
+                  (if (i32.eqz (call $check_exhaustiveness (local.get $child_node)))
+                    (then
+                      ;; Non-exhaustive match - could be an error or warning
+                      ;; For now, continue but this should ideally be handled
+                    ))
+
+                  ;; Generate pattern matching code
+                  (local.set $success (call $generate_pattern_matching (local.get $child_node)))
+                  (if (i32.eqz (local.get $success))
+                    (then (return (i32.const 0))))
+                )
+                (else
+                  ;; Check for other expression/control flow constructs
+                  (if (i32.eq (local.get $node_type) (global.get $EXPR_BLOCK))
+                    (then
+                      ;; Generate block expression
+                      (local.set $success (call $generate_control_flow (local.get $child_node)))
+                      (if (i32.eqz (local.get $success))
+                        (then (return (i32.const 0))))
+                    ))
+                ))))
 
           (local.set $i (i32.add (local.get $i) (i32.const 1)))
           (br $traverse_loop))))

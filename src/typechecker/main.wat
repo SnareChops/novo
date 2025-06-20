@@ -61,6 +61,12 @@
   (export "TYPE_S32" (global $TYPE_S32))
   (export "TYPE_S64" (global $TYPE_S64))
 
+  ;; Export compound types
+  (export "TYPE_OPTION" (global $TYPE_OPTION))
+  (export "TYPE_RESULT" (global $TYPE_RESULT))
+  (export "TYPE_LIST" (global $TYPE_LIST))
+  (export "TYPE_TUPLE" (global $TYPE_TUPLE))
+
   ;; Type information table - maps AST nodes to types
   ;; Memory layout: [node_ptr: i32][type_id: i32]
   (global $TYPE_TABLE_START i32 (i32.const 8192))

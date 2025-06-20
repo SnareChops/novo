@@ -101,6 +101,7 @@ build_modules=(
   "codegen/stack:codegen-stack"
   "codegen/expressions:codegen-expressions"
   "codegen/control-flow:codegen-control-flow"
+  "codegen/patterns:codegen-patterns"
   "codegen/main:codegen-main"
 )
 
@@ -185,6 +186,7 @@ preloads=(
   "codegen_stack=codegen-stack.wasm"
   "codegen_expressions=codegen-expressions.wasm"
   "codegen_control_flow=codegen-control-flow.wasm"
+  "codegen_patterns=codegen-patterns.wasm"
   "codegen_main=codegen-main.wasm"
 )
 preload_args=()
