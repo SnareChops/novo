@@ -93,6 +93,15 @@ build_modules=(
   "meta-functions/record:meta-functions-record"
   "meta-functions/resource:meta-functions-resource"
   "meta-functions/main:meta-functions-main"
+
+  # Code generation modules (depend on type checker, AST, and meta functions)
+  "codegen/core:codegen-core"
+  "codegen/module:codegen-module"
+  "codegen/functions:codegen-functions"
+  "codegen/stack:codegen-stack"
+  "codegen/expressions:codegen-expressions"
+  "codegen/control-flow:codegen-control-flow"
+  "codegen/main:codegen-main"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -169,6 +178,14 @@ preloads=(
   "meta_functions_record=meta-functions-record.wasm"
   "meta_functions_resource=meta-functions-resource.wasm"
   "meta_functions_main=meta-functions-main.wasm"
+  # Code generation modules (depend on typechecker, AST, and meta functions)
+  "codegen_core=codegen-core.wasm"
+  "codegen_module=codegen-module.wasm"
+  "codegen_functions=codegen-functions.wasm"
+  "codegen_stack=codegen-stack.wasm"
+  "codegen_expressions=codegen-expressions.wasm"
+  "codegen_control_flow=codegen-control-flow.wasm"
+  "codegen_main=codegen-main.wasm"
 )
 preload_args=()
 for preload in "${preloads[@]}"; do
@@ -219,6 +236,7 @@ else
     $(find . -path './parser/*' -name '*-test.wasm' | sort)
     $(find . -path './typechecker/*' -name '*-test.wasm' | sort)
     $(find . -path './meta-functions/*' -name '*-test.wasm' | sort)
+    $(find . -path './codegen/*' -name '*-test.wasm' | sort)
   )
 fi
 
