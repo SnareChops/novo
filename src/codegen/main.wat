@@ -1,5 +1,12 @@
 ;; Code Generation Main Module
 ;; Main orchestration for the code generation system
+;;
+;; NOTE: This module now generates WAT text format for debugging/inspection.
+;; For primary binary WASM output (.wasm files), use the binary codegen backend
+;; through compiler_main.wat which routes to codegen/binary_main.wat
+;;
+;; Phase 7.3: Binary WASM is now the primary compilation target.
+;; WAT text output is available as a future feature for 'novo wat' command.
 
 (module $codegen_main
   ;; Import memory for string storage
@@ -56,7 +63,9 @@
     (global.set $exports_generated (i32.const 0))
   )
 
-  ;; Generate complete WASM module from AST
+  ;; Generate complete WASM module from AST (LEGACY: WAT text output)
+  ;; NOTE: This function now generates WAT text format for debugging purposes.
+  ;; For primary binary WASM output, use the binary codegen backend through compiler_main.
   ;; @param ast_root i32 - Root AST node
   ;; @param module_name_ptr i32 - Module name string
   ;; @param module_name_len i32 - Module name length

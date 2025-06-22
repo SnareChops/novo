@@ -25,9 +25,9 @@ Novo prioritizes developer understanding and control over automatic optimization
 ## Compilation Output
 
 Novo components compile to:
-- Binary `.wasm` files for execution in any WASM runtime
-- `.wit` interface files for component interoperability
-- Optional core WASM output for compatibility with non-component environments
+- **Primary Output**: Binary `.wasm` files for execution in any WASM runtime
+- **Interface Output**: `.wit` interface files for component interoperability
+- **Future Features**: Optional `.wat` text format output for debugging and inspection
 
 ## Getting Started
 

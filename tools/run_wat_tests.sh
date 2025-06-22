@@ -104,6 +104,13 @@ build_modules=(
   "codegen/patterns:codegen-patterns"
   "codegen/error-handling:codegen-error-handling"
   "codegen/main:codegen-main"
+
+  # Binary code generation modules (Phase 7.3 - Binary WASM output correction)
+  "codegen/binary/leb128:leb128-encoder"
+  "codegen/binary/instructions:instruction-encoder"
+  "codegen/binary/sections:section-generator"
+  "codegen/binary/encoder:binary-encoder"
+  "codegen/binary_main:codegen-binary-main"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -190,6 +197,12 @@ preloads=(
   "codegen_patterns=codegen-patterns.wasm"
   "codegen_error_handling=codegen-error-handling.wasm"
   "codegen_main=codegen-main.wasm"
+  # Binary code generation modules (Phase 7.3 - Binary WASM output correction)
+  "leb128_encoder=leb128-encoder.wasm"
+  "instruction_encoder=instruction-encoder.wasm"
+  "section_generator=section-generator.wasm"
+  "binary_encoder=binary-encoder.wasm"
+  "codegen_binary_main=codegen-binary-main.wasm"
 )
 preload_args=()
 for preload in "${preloads[@]}"; do

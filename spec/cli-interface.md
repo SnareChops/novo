@@ -32,14 +32,16 @@ world novo-compiler {
 
     // Export compiler commands
     export compile: func(source-path: string, output-path: string) -> result<_, string>
-    export wat: func(source-path: string, output-path: string) -> result<_, string>
     export wit: func(source-path: string, output-path: string) -> result<_, string>
+
+    // Future feature exports
+    // export wat: func(source-path: string, output-path: string) -> result<_, string>
 }
 ```
 
 ## Command Structure
 
-The Novo compiler provides separate commands for different compilation targets:
+The Novo compiler provides commands for different compilation targets, with binary WASM as the primary output format:
 
 ### `novo compile`
 
@@ -59,7 +61,11 @@ novo compile <source-file> <output-file>
 novo compile src/main.no build/main.wasm
 ```
 
-### `novo wat`
+**Note**: This is the primary compilation target for Novo, producing executable WebAssembly binary files.
+
+### `novo wat` (Future Feature)
+
+*Note: This feature is planned for future implementation as a debugging and inspection tool.*
 
 Compiles Novo source files to WebAssembly text format (.wat).
 
@@ -76,6 +82,8 @@ novo wat <source-file> <output-file>
 ```bash
 novo wat src/main.no build/main.wat
 ```
+
+**Status**: This command will be implemented in a future release to provide human-readable WAT output for debugging purposes.
 
 ### `novo compile-wit`
 
