@@ -116,6 +116,9 @@ build_modules=(
   # Component code generation (Phase 8.3 - Component Code Generation)
   "codegen/components:codegen-components"
 
+  # Default values and inline functions (Phase 9 - Default Values and Inline Functions)
+  "codegen/defaults:codegen-defaults"
+
   # WIT export modules (Phase 8.2 - WIT Export Generation)
   "wit-export/type-mapping:wit-export-type-mapping"
   "wit-export/generator:wit-export-generator"
@@ -216,6 +219,9 @@ preloads=(
 
   # Component code generation (Phase 8.3 - Component Code Generation)
   "codegen_components=codegen-components.wasm"
+
+  # Default values and inline functions (Phase 9 - Default Values and Inline Functions)
+  "codegen_defaults=codegen-defaults.wasm"
 
   # WIT export modules (Phase 8.2 - WIT Export Generation)
   "wit_export_type_mapping=wit-export-type-mapping.wasm"

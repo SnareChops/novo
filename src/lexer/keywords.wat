@@ -7,74 +7,222 @@
 
   ;; Import token constants
   (import "tokens" "TOKEN_IDENTIFIER" (global $TOKEN_IDENTIFIER i32))
-
-  ;; Keyword matching data
-  (data (i32.const 1024) "func\00inline\00return\00if\00else\00while\00break\00continue\00match\00bool\00s8\00s16\00s32\00s64\00u8\00u16\00u32\00u64\00f32\00f64\00char\00string\00list\00option\00result\00tuple\00record\00variant\00enum\00flags\00type\00resource\00some\00none\00ok\00error\00true\00false\00component\00interface\00world\00import\00export\00use\00include\00")
+  (import "tokens" "TOKEN_KW_FUNC" (global $TOKEN_KW_FUNC i32))
+  (import "tokens" "TOKEN_KW_INLINE" (global $TOKEN_KW_INLINE i32))
+  (import "tokens" "TOKEN_KW_RETURN" (global $TOKEN_KW_RETURN i32))
+  (import "tokens" "TOKEN_KW_IF" (global $TOKEN_KW_IF i32))
+  (import "tokens" "TOKEN_KW_ELSE" (global $TOKEN_KW_ELSE i32))
+  (import "tokens" "TOKEN_KW_WHILE" (global $TOKEN_KW_WHILE i32))
+  (import "tokens" "TOKEN_KW_BREAK" (global $TOKEN_KW_BREAK i32))
+  (import "tokens" "TOKEN_KW_CONTINUE" (global $TOKEN_KW_CONTINUE i32))
+  (import "tokens" "TOKEN_KW_MATCH" (global $TOKEN_KW_MATCH i32))
+  (import "tokens" "TOKEN_KW_BOOL" (global $TOKEN_KW_BOOL i32))
+  (import "tokens" "TOKEN_KW_STRING" (global $TOKEN_KW_STRING i32))
+  (import "tokens" "TOKEN_KW_TRUE" (global $TOKEN_KW_TRUE i32))
+  (import "tokens" "TOKEN_KW_FALSE" (global $TOKEN_KW_FALSE i32))
 
   ;; Function to check if identifier is a keyword
   (func $is_keyword (param $id_start i32) (param $id_len i32) (result i32)
-    (local $keyword_ptr i32)
-    (local $i i32)
-    (local $keyword_start i32)
+    ;; Check exact keyword matches by length and content
 
-    ;; Start at beginning of keyword data
-    (local.set $keyword_ptr (i32.const 1024))
+    ;; Length 2: "if"
+    (if (i32.eq (local.get $id_len) (i32.const 2))
+      (then
+        (if (i32.and
+              (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 105))      ;; 'i'
+              (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 102))) ;; 'f'
+          (then (return (global.get $TOKEN_KW_IF)))
+        )
+      )
+    )
 
-    ;; For each keyword
-    (block $done
-      (loop $next_keyword
-        ;; Check for end of keywords (double null)
-        (br_if $done (i32.eqz (i32.load8_u (local.get $keyword_ptr))))
-
-        ;; Compare keyword
-        (local.set $i (i32.const 0))
-        (local.set $keyword_start (local.get $keyword_ptr))
-
-        (block $mismatch
-          (loop $check_char
-            ;; If we've reached end of identifier, check if keyword also ends
-            (if (i32.eq (local.get $i) (local.get $id_len))
-              (then
-                ;; If keyword ends here too, we found a match
-                (if (i32.eqz (i32.load8_u (i32.add (local.get $keyword_start) (local.get $i))))
-                  (then
-                    ;; Calculate keyword token type based on position
-                    (return (i32.add
-                      (i32.const 11)  ;; Base keyword token type
-                      (i32.div_u
-                        (i32.sub (local.get $keyword_start) (i32.const 1024))
-                        (i32.const 10) ;; Approximate average keyword length
-                      )
-                    ))
-                  )
-                )
-                (br $mismatch)
-              )
-            )
-
-            ;; Compare characters
-            (if (i32.ne
-                  (i32.load8_u (i32.add (local.get $id_start) (local.get $i)))
-                  (i32.load8_u (i32.add (local.get $keyword_start) (local.get $i))))
-              (then (br $mismatch))
-            )
-
-            ;; Next character
-            (local.set $i (i32.add (local.get $i) (i32.const 1)))
-            (br $check_char)
-          )
+    ;; Length 4: "func", "bool", "else", "true"
+    (if (i32.eq (local.get $id_len) (i32.const 4))
+      (then
+        ;; Check "func"
+        (if (i32.and
+              (i32.and
+                (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 102))      ;; 'f'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 117))) ;; 'u'
+              (i32.and
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 110))  ;; 'n'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 99))))  ;; 'c'
+          (then (return (global.get $TOKEN_KW_FUNC)))
         )
 
-        ;; Skip to next keyword
-        (block $found_null
-          (loop $find_null
-            (local.set $keyword_ptr (i32.add (local.get $keyword_ptr) (i32.const 1)))
-            (br_if $found_null (i32.eqz (i32.load8_u (local.get $keyword_ptr))))
-            (br $find_null)
-          )
+        ;; Check "bool"
+        (if (i32.and
+              (i32.and
+                (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 98))       ;; 'b'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 111))) ;; 'o'
+              (i32.and
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 111))  ;; 'o'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 108))))  ;; 'l'
+          (then (return (global.get $TOKEN_KW_BOOL)))
         )
-        (local.set $keyword_ptr (i32.add (local.get $keyword_ptr) (i32.const 1)))
-        (br $next_keyword)
+
+        ;; Check "else"
+        (if (i32.and
+              (i32.and
+                (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 101))      ;; 'e'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 108))) ;; 'l'
+              (i32.and
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 115))  ;; 's'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 101))))  ;; 'e'
+          (then (return (global.get $TOKEN_KW_ELSE)))
+        )
+
+        ;; Check "true"
+        (if (i32.and
+              (i32.and
+                (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 116))      ;; 't'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 114))) ;; 'r'
+              (i32.and
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 117))  ;; 'u'
+                (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 101))))  ;; 'e'
+          (then (return (global.get $TOKEN_KW_TRUE)))
+        )
+      )
+    )
+
+    ;; Length 5: "while", "break", "match", "false"
+    (if (i32.eq (local.get $id_len) (i32.const 5))
+      (then
+        ;; Check "while"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 119))      ;; 'w'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 104))) ;; 'h'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 105))  ;; 'i'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 108))))  ;; 'l'
+              (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 101)))   ;; 'e'
+          (then (return (global.get $TOKEN_KW_WHILE)))
+        )
+
+        ;; Check "break"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 98))       ;; 'b'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 114))) ;; 'r'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 101))  ;; 'e'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 97))))  ;; 'a'
+              (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 107)))   ;; 'k'
+          (then (return (global.get $TOKEN_KW_BREAK)))
+        )
+
+        ;; Check "match"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 109))      ;; 'm'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 97))) ;; 'a'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 116))  ;; 't'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 99))))  ;; 'c'
+              (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 104)))   ;; 'h'
+          (then (return (global.get $TOKEN_KW_MATCH)))
+        )
+
+        ;; Check "false"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 102))      ;; 'f'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 97))) ;; 'a'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 108))  ;; 'l'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 115))))  ;; 's'
+              (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 101)))   ;; 'e'
+          (then (return (global.get $TOKEN_KW_FALSE)))
+        )
+      )
+    )
+
+    ;; Length 6: "inline", "return", "string"
+    (if (i32.eq (local.get $id_len) (i32.const 6))
+      (then
+        ;; Check "inline"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.and
+                    (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 105))      ;; 'i'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 110))) ;; 'n'
+                  (i32.and
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 108))  ;; 'l'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 105))))  ;; 'i'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 110))   ;; 'n'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 5))) (i32.const 101))))   ;; 'e'
+              (i32.const 1)) ;; Always true if all conditions met
+          (then (return (global.get $TOKEN_KW_INLINE)))
+        )
+
+        ;; Check "return"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.and
+                    (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 114))      ;; 'r'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 101))) ;; 'e'
+                  (i32.and
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 116))  ;; 't'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 117))))  ;; 'u'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 114))   ;; 'r'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 5))) (i32.const 110))))   ;; 'n'
+              (i32.const 1)) ;; Always true if all conditions met
+          (then (return (global.get $TOKEN_KW_RETURN)))
+        )
+
+        ;; Check "string"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.and
+                    (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 115))      ;; 's'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 116))) ;; 't'
+                  (i32.and
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 114))  ;; 'r'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 105))))  ;; 'i'
+                (i32.and
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 110))   ;; 'n'
+                  (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 5))) (i32.const 103))))   ;; 'g'
+              (i32.const 1)) ;; Always true if all conditions met
+          (then (return (global.get $TOKEN_KW_STRING)))
+        )
+      )
+    )
+
+    ;; Length 8: "continue"
+    (if (i32.eq (local.get $id_len) (i32.const 8))
+      (then
+        ;; Check "continue"
+        (if (i32.and
+              (i32.and
+                (i32.and
+                  (i32.and
+                    (i32.and
+                      (i32.and
+                        (i32.eq (i32.load8_u (local.get $id_start)) (i32.const 99))       ;; 'c'
+                        (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 1))) (i32.const 111))) ;; 'o'
+                      (i32.and
+                        (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 2))) (i32.const 110))  ;; 'n'
+                        (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 3))) (i32.const 116))))  ;; 't'
+                    (i32.and
+                      (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 4))) (i32.const 105))   ;; 'i'
+                      (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 5))) (i32.const 110))))   ;; 'n'
+                  (i32.and
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 6))) (i32.const 117))     ;; 'u'
+                    (i32.eq (i32.load8_u (i32.add (local.get $id_start) (i32.const 7))) (i32.const 101))))     ;; 'e'
+                (i32.const 1)) ;; Always true if all conditions met
+              (i32.const 1)) ;; Always true if all conditions met
+          (then (return (global.get $TOKEN_KW_CONTINUE)))
+        )
       )
     )
 

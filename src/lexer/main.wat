@@ -141,15 +141,15 @@
       ;; Handle identifiers (kebab-case)
       (if (call $is_letter (local.get $char))
         (then
-          (local.set $next_pos (call $scan_identifier (local.get $pos)))
-          ;; Store identifier content
-          (call $store_identifier
-            (local.get $pos)
-            (i32.sub (local.get $next_pos) (local.get $pos))
-          )
+          ;; scan_identifier returns (token_type, next_pos)
+          (call $scan_identifier (local.get $pos))
+          (local.set $next_pos)
+          (local.set $token_type)
+
+          ;; Store identifier token using the token type from scan_identifier
           (local.set $token_idx
             (call $store_token
-              (global.get $TOKEN_IDENTIFIER)
+              (local.get $token_type)
               (local.get $pos)
             )
           )
