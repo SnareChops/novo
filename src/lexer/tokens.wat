@@ -63,23 +63,32 @@
   (global $TOKEN_KW_TRUE i32 (i32.const 47))      ;; true
   (global $TOKEN_KW_FALSE i32 (i32.const 48))     ;; false
 
+  ;; Component System Keywords
+  (global $TOKEN_KW_COMPONENT i32 (i32.const 49)) ;; component
+  (global $TOKEN_KW_INTERFACE i32 (i32.const 50)) ;; interface
+  (global $TOKEN_KW_WORLD i32 (i32.const 51))     ;; world
+  (global $TOKEN_KW_IMPORT i32 (i32.const 52))    ;; import
+  (global $TOKEN_KW_EXPORT i32 (i32.const 53))    ;; export
+  (global $TOKEN_KW_USE i32 (i32.const 54))       ;; use
+  (global $TOKEN_KW_INCLUDE i32 (i32.const 55))   ;; include
+
   ;; Mathematical Operators
-  (global $TOKEN_PLUS i32 (i32.const 49))        ;; +
-  (global $TOKEN_MINUS i32 (i32.const 50))       ;; -
-  (global $TOKEN_MULTIPLY i32 (i32.const 51))    ;; *
-  (global $TOKEN_DIVIDE i32 (i32.const 52))      ;; /
-  (global $TOKEN_MODULO i32 (i32.const 53))      ;; %
+  (global $TOKEN_PLUS i32 (i32.const 56))        ;; +
+  (global $TOKEN_MINUS i32 (i32.const 57))       ;; -
+  (global $TOKEN_MULTIPLY i32 (i32.const 58))    ;; *
+  (global $TOKEN_DIVIDE i32 (i32.const 59))      ;; /
+  (global $TOKEN_MODULO i32 (i32.const 60))      ;; %
 
   ;; Literals
-  (global $TOKEN_NUMBER_LITERAL i32 (i32.const 54))  ;; 42, 3.14, etc.
-  (global $TOKEN_STRING_LITERAL i32 (i32.const 55))  ;; "hello world"
+  (global $TOKEN_NUMBER_LITERAL i32 (i32.const 61))  ;; 42, 3.14, etc.
+  (global $TOKEN_STRING_LITERAL i32 (i32.const 62))  ;; "hello world"
 
   ;; Punctuation
-  (global $TOKEN_COMMA i32 (i32.const 56))          ;; ,
+  (global $TOKEN_COMMA i32 (i32.const 63))          ;; ,
 
   ;; WAT-style Function Syntax
-  (global $TOKEN_LPAREN i32 (i32.const 57))      ;; (
-  (global $TOKEN_RPAREN i32 (i32.const 58))      ;; )
+  (global $TOKEN_LPAREN i32 (i32.const 64))      ;; (
+  (global $TOKEN_RPAREN i32 (i32.const 65))      ;; )
 
   ;; Export all token constants for use by other modules
   (export "TOKEN_ERROR" (global $TOKEN_ERROR))
@@ -141,6 +150,15 @@
   ;; Boolean literal tokens
   (export "TOKEN_KW_TRUE" (global $TOKEN_KW_TRUE))
   (export "TOKEN_KW_FALSE" (global $TOKEN_KW_FALSE))
+
+  ;; Component system tokens
+  (export "TOKEN_KW_COMPONENT" (global $TOKEN_KW_COMPONENT))
+  (export "TOKEN_KW_INTERFACE" (global $TOKEN_KW_INTERFACE))
+  (export "TOKEN_KW_WORLD" (global $TOKEN_KW_WORLD))
+  (export "TOKEN_KW_IMPORT" (global $TOKEN_KW_IMPORT))
+  (export "TOKEN_KW_EXPORT" (global $TOKEN_KW_EXPORT))
+  (export "TOKEN_KW_USE" (global $TOKEN_KW_USE))
+  (export "TOKEN_KW_INCLUDE" (global $TOKEN_KW_INCLUDE))
 
   ;; Operator tokens
   (export "TOKEN_PLUS" (global $TOKEN_PLUS))

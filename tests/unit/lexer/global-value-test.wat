@@ -12,8 +12,8 @@
     ;; Get the global value
     (local.set $global_value (global.get $TOKEN_NUMBER_LITERAL))
 
-    ;; Check if it's the expected value (54)
-    (if (i32.ne (local.get $global_value) (i32.const 54))
+    ;; Check if it's the expected value (61)
+    (if (i32.ne (local.get $global_value) (i32.const 61))
       (then
         ;; Wrong value - use the actual value to determine what it is
         ;; If it's 0, cause specific error
@@ -35,6 +35,6 @@
       )
     )
 
-    ;; Test passed - global value is correct (54)
+    ;; Test passed - global value is correct (61)
   )
 )

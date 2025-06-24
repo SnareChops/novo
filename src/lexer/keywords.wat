@@ -9,7 +9,7 @@
   (import "tokens" "TOKEN_IDENTIFIER" (global $TOKEN_IDENTIFIER i32))
 
   ;; Keyword matching data
-  (data (i32.const 1024) "func\00inline\00return\00if\00else\00while\00break\00continue\00match\00bool\00s8\00s16\00s32\00s64\00u8\00u16\00u32\00u64\00f32\00f64\00char\00string\00list\00option\00result\00tuple\00record\00variant\00enum\00flags\00type\00resource\00some\00none\00ok\00error\00true\00false\00")
+  (data (i32.const 1024) "func\00inline\00return\00if\00else\00while\00break\00continue\00match\00bool\00s8\00s16\00s32\00s64\00u8\00u16\00u32\00u64\00f32\00f64\00char\00string\00list\00option\00result\00tuple\00record\00variant\00enum\00flags\00type\00resource\00some\00none\00ok\00error\00true\00false\00component\00interface\00world\00import\00export\00use\00include\00")
 
   ;; Function to check if identifier is a keyword
   (func $is_keyword (param $id_start i32) (param $id_len i32) (result i32)

@@ -50,8 +50,8 @@
       )
     )
 
-    ;; If token_type is 54 (TOKEN_NUMBER_LITERAL), pass
-    (if (i32.eq (local.get $token_type) (i32.const 54))
+    ;; If token_type is 61 (TOKEN_NUMBER_LITERAL), pass
+    (if (i32.eq (local.get $token_type) (i32.const 61))
       (then
         (return)  ;; Success
       )

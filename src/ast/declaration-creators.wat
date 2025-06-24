@@ -12,6 +12,10 @@
 
   ;; Import declaration node type constants
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
+  (import "ast_node_types" "DECL_COMPONENT" (global $DECL_COMPONENT i32))
+  (import "ast_node_types" "DECL_INTERFACE" (global $DECL_INTERFACE i32))
+  (import "ast_node_types" "DECL_IMPORT" (global $DECL_IMPORT i32))
+  (import "ast_node_types" "DECL_EXPORT" (global $DECL_EXPORT i32))
   (import "ast_node_types" "NODE_DATA_OFFSET" (global $NODE_DATA_OFFSET i32))
 
   ;; Create a function declaration node
@@ -53,6 +57,192 @@
               (i32.const 4)))  ;; After length field
           (local.get $name_ptr)
           (local.get $name_len))))
+
+    (local.get $node))
+
+  ;; Create a component declaration node
+  ;; @param $name_ptr i32 - Pointer to component name string
+  ;; @param $name_len i32 - Length of component name string
+  ;; @returns i32 - Pointer to new node
+  (func $create_decl_component (export "create_decl_component")
+    (param $name_ptr i32) (param $name_len i32) (result i32)
+    (local $node i32)
+    (local $data_size i32)
+
+    ;; Calculate data size (name length + size field)
+    (local.set $data_size
+      (i32.add
+        (local.get $name_len)
+        (i32.const 4)))
+
+    ;; Create base node
+    (local.set $node
+      (call $create_node
+        (global.get $DECL_COMPONENT)
+        (local.get $data_size)))
+
+    ;; If allocation successful, copy data
+    (if (local.get $node)
+      (then
+        ;; Store name length
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $name_len))
+        ;; Copy name string
+        (memory.copy
+          (i32.add
+            (local.get $node)
+            (i32.add
+              (global.get $NODE_DATA_OFFSET)
+              (i32.const 4)))  ;; After length field
+          (local.get $name_ptr)
+          (local.get $name_len))))
+
+    (local.get $node))
+
+  ;; Create an interface declaration node
+  ;; @param $name_ptr i32 - Pointer to interface name string
+  ;; @param $name_len i32 - Length of interface name string
+  ;; @returns i32 - Pointer to new node
+  (func $create_decl_interface (export "create_decl_interface")
+    (param $name_ptr i32) (param $name_len i32) (result i32)
+    (local $node i32)
+    (local $data_size i32)
+
+    ;; Calculate data size (name length + size field)
+    (local.set $data_size
+      (i32.add
+        (local.get $name_len)
+        (i32.const 4)))
+
+    ;; Create base node
+    (local.set $node
+      (call $create_node
+        (global.get $DECL_INTERFACE)
+        (local.get $data_size)))
+
+    ;; If allocation successful, copy data
+    (if (local.get $node)
+      (then
+        ;; Store name length
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (global.get $NODE_DATA_OFFSET))
+          (local.get $name_len))
+        ;; Copy name string
+        (memory.copy
+          (i32.add
+            (local.get $node)
+            (i32.add
+              (global.get $NODE_DATA_OFFSET)
+              (i32.const 4)))  ;; After length field
+          (local.get $name_ptr)
+          (local.get $name_len))))
+
+    (local.get $node))
+
+  ;; Create an import declaration node
+  ;; @param $module_ptr i32 - Pointer to module name string
+  ;; @param $module_len i32 - Length of module name string
+  ;; @param $item_ptr i32 - Pointer to imported item string (can be 0 for whole module)
+  ;; @param $item_len i32 - Length of imported item string (can be 0 for whole module)
+  ;; @returns i32 - Pointer to new node
+  (func $create_decl_import (export "create_decl_import")
+    (param $module_ptr i32) (param $module_len i32)
+    (param $item_ptr i32) (param $item_len i32) (result i32)
+    (local $node i32)
+    (local $data_size i32)
+    (local $data_offset i32)
+
+    ;; Calculate data size (two lengths + two strings)
+    (local.set $data_size
+      (i32.add
+        (i32.add
+          (local.get $module_len)
+          (local.get $item_len))
+        (i32.const 8)))  ;; Two length fields
+
+    ;; Create base node
+    (local.set $node
+      (call $create_node
+        (global.get $DECL_IMPORT)
+        (local.get $data_size)))
+
+    ;; If allocation successful, copy data
+    (if (local.get $node)
+      (then
+        (local.set $data_offset (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET)))
+
+        ;; Store module name length
+        (i32.store (local.get $data_offset) (local.get $module_len))
+        (local.set $data_offset (i32.add (local.get $data_offset) (i32.const 4)))
+
+        ;; Store item name length
+        (i32.store (local.get $data_offset) (local.get $item_len))
+        (local.set $data_offset (i32.add (local.get $data_offset) (i32.const 4)))
+
+        ;; Copy module name string
+        (memory.copy (local.get $data_offset) (local.get $module_ptr) (local.get $module_len))
+        (local.set $data_offset (i32.add (local.get $data_offset) (local.get $module_len)))
+
+        ;; Copy item name string (if present)
+        (if (local.get $item_len)
+          (then
+            (memory.copy (local.get $data_offset) (local.get $item_ptr) (local.get $item_len))))))
+
+    (local.get $node))
+
+  ;; Create an export declaration node
+  ;; @param $name_ptr i32 - Pointer to exported name string
+  ;; @param $name_len i32 - Length of exported name string
+  ;; @param $alias_ptr i32 - Pointer to export alias string (can be 0 for same name)
+  ;; @param $alias_len i32 - Length of export alias string (can be 0 for same name)
+  ;; @returns i32 - Pointer to new node
+  (func $create_decl_export (export "create_decl_export")
+    (param $name_ptr i32) (param $name_len i32)
+    (param $alias_ptr i32) (param $alias_len i32) (result i32)
+    (local $node i32)
+    (local $data_size i32)
+    (local $data_offset i32)
+
+    ;; Calculate data size (two lengths + two strings)
+    (local.set $data_size
+      (i32.add
+        (i32.add
+          (local.get $name_len)
+          (local.get $alias_len))
+        (i32.const 8)))  ;; Two length fields
+
+    ;; Create base node
+    (local.set $node
+      (call $create_node
+        (global.get $DECL_EXPORT)
+        (local.get $data_size)))
+
+    ;; If allocation successful, copy data
+    (if (local.get $node)
+      (then
+        (local.set $data_offset (i32.add (local.get $node) (global.get $NODE_DATA_OFFSET)))
+
+        ;; Store name length
+        (i32.store (local.get $data_offset) (local.get $name_len))
+        (local.set $data_offset (i32.add (local.get $data_offset) (i32.const 4)))
+
+        ;; Store alias length
+        (i32.store (local.get $data_offset) (local.get $alias_len))
+        (local.set $data_offset (i32.add (local.get $data_offset) (i32.const 4)))
+
+        ;; Copy name string
+        (memory.copy (local.get $data_offset) (local.get $name_ptr) (local.get $name_len))
+        (local.set $data_offset (i32.add (local.get $data_offset) (local.get $name_len)))
+
+        ;; Copy alias string (if present)
+        (if (local.get $alias_len)
+          (then
+            (memory.copy (local.get $data_offset) (local.get $alias_ptr) (local.get $alias_len))))))
 
     (local.get $node))
 )

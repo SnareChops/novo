@@ -19,6 +19,10 @@
   (import "ast_node_types" "TYPE_RESOURCE" (global $TYPE_RESOURCE i32))
   (import "ast_node_types" "EXPR_IDENTIFIER" (global $EXPR_IDENTIFIER i32))
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
+  (import "ast_node_types" "DECL_COMPONENT" (global $DECL_COMPONENT i32))
+  (import "ast_node_types" "DECL_INTERFACE" (global $DECL_INTERFACE i32))
+  (import "ast_node_types" "DECL_IMPORT" (global $DECL_IMPORT i32))
+  (import "ast_node_types" "DECL_EXPORT" (global $DECL_EXPORT i32))
 
   ;; Import memory management functions
   (import "ast_memory" "init_memory_manager" (func $init_memory_manager))
@@ -33,6 +37,10 @@
   ;; Import node creator functions
   (import "ast_type_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
   (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_component" (func $create_decl_component (param i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_interface" (func $create_decl_interface (param i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_import" (func $create_decl_import (param i32 i32 i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_export" (func $create_decl_export (param i32 i32 i32 i32) (result i32)))
   (import "ast_expression_creators" "create_expr_identifier" (func $create_expr_identifier (param i32 i32) (result i32)))
   (import "ast_expression_creators" "create_integer_literal" (func $create_integer_literal (param i32) (result i32)))
   (import "ast_expression_creators" "create_float_literal" (func $create_float_literal (param i32) (result i32)))
@@ -55,6 +63,10 @@
 
   ;; Export interface - Node creators
   (export "create_decl_function" (func $create_decl_function))
+  (export "create_decl_component" (func $create_decl_component))
+  (export "create_decl_interface" (func $create_decl_interface))
+  (export "create_decl_import" (func $create_decl_import))
+  (export "create_decl_export" (func $create_decl_export))
   (export "create_expr_identifier" (func $create_expr_identifier))
   (export "create_integer_literal" (func $create_integer_literal))
   (export "create_float_literal" (func $create_float_literal))
@@ -75,4 +87,8 @@
   (export "TYPE_RESOURCE" (global $TYPE_RESOURCE))
   (export "EXPR_IDENTIFIER" (global $EXPR_IDENTIFIER))
   (export "DECL_FUNCTION" (global $DECL_FUNCTION))
+  (export "DECL_COMPONENT" (global $DECL_COMPONENT))
+  (export "DECL_INTERFACE" (global $DECL_INTERFACE))
+  (export "DECL_IMPORT" (global $DECL_IMPORT))
+  (export "DECL_EXPORT" (global $DECL_EXPORT))
 )

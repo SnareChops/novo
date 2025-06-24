@@ -73,6 +73,7 @@ build_modules=(
   "parser/functions:parser-functions"
   "parser/control-flow:parser-control-flow"
   "parser/patterns:parser-patterns"
+  "parser/components:parser-components"
   # Split parser expression modules
   "parser/expression-utilities:parser-expression-utilities"
   "parser/expression-parsing:parser-expression-parsing"
@@ -173,6 +174,7 @@ preloads=(
   "parser_expression_core=parser-expression-core.wasm"
   "parser_functions=parser-functions.wasm"
   "parser_control_flow=parser-control-flow.wasm"
+  "parser_components=parser-components.wasm"
   "parser_main=parser-main.wasm"
   # Typechecker modules (main must come before pattern modules)
   "typechecker_main=typechecker-main.wasm"
