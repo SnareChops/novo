@@ -21,17 +21,20 @@
   ;; Create a function declaration node
   ;; @param $name_ptr i32 - Pointer to function name string
   ;; @param $name_len i32 - Length of function name string
+  ;; @param $is_inline i32 - 1 if function is declared inline, 0 otherwise
   ;; @returns i32 - Pointer to new node
   (func $create_decl_function (export "create_decl_function")
-    (param $name_ptr i32) (param $name_len i32) (result i32)
+    (param $name_ptr i32) (param $name_len i32) (param $is_inline i32) (result i32)
     (local $node i32)
     (local $data_size i32)
 
-    ;; Calculate data size (name length + size field)
+    ;; Calculate data size (inline flag + name length + name string)
     (local.set $data_size
       (i32.add
-        (local.get $name_len)
-        (i32.const 4)))
+        (i32.add
+          (local.get $name_len)
+          (i32.const 4))    ;; name length field
+        (i32.const 4)))     ;; inline flag field
 
     ;; Create base node
     (local.set $node
@@ -42,11 +45,19 @@
     ;; If allocation successful, copy data
     (if (local.get $node)
       (then
-        ;; Store name length
+        ;; Store inline flag
         (i32.store
           (i32.add
             (local.get $node)
             (global.get $NODE_DATA_OFFSET))
+          (local.get $is_inline))
+        ;; Store name length
+        (i32.store
+          (i32.add
+            (local.get $node)
+            (i32.add
+              (global.get $NODE_DATA_OFFSET)
+              (i32.const 4)))
           (local.get $name_len))
         ;; Copy name string
         (memory.copy
@@ -54,7 +65,7 @@
             (local.get $node)
             (i32.add
               (global.get $NODE_DATA_OFFSET)
-              (i32.const 4)))  ;; After length field
+              (i32.const 8)))  ;; After inline flag and length field
           (local.get $name_ptr)
           (local.get $name_len))))
 
@@ -245,4 +256,40 @@
             (memory.copy (local.get $data_offset) (local.get $alias_ptr) (local.get $alias_len))))))
 
     (local.get $node))
+
+  ;; Get the inline flag from a function declaration node
+  ;; @param $node i32 - Pointer to function declaration node
+  ;; @returns i32 - 1 if function is inline, 0 otherwise
+  (func $get_function_inline_flag (export "get_function_inline_flag")
+    (param $node i32) (result i32)
+    (i32.load
+      (i32.add
+        (local.get $node)
+        (global.get $NODE_DATA_OFFSET)))
+  )
+
+  ;; Get the name length from a function declaration node
+  ;; @param $node i32 - Pointer to function declaration node
+  ;; @returns i32 - Length of function name
+  (func $get_function_name_length (export "get_function_name_length")
+    (param $node i32) (result i32)
+    (i32.load
+      (i32.add
+        (local.get $node)
+        (i32.add
+          (global.get $NODE_DATA_OFFSET)
+          (i32.const 4))))
+  )
+
+  ;; Get pointer to the function name string
+  ;; @param $node i32 - Pointer to function declaration node
+  ;; @returns i32 - Pointer to function name string
+  (func $get_function_name_ptr (export "get_function_name_ptr")
+    (param $node i32) (result i32)
+    (i32.add
+      (local.get $node)
+      (i32.add
+        (global.get $NODE_DATA_OFFSET)
+        (i32.const 8)))
+  )
 )

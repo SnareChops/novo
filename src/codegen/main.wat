@@ -10,7 +10,7 @@
 
 (module $codegen_main
   ;; Import memory for string storage
-  (import "lexer_memory" "memory" (memory 1))
+  (import "memory" "memory" (memory 1))
 
   ;; Import all code generation modules
   (import "codegen_core" "init_codegen" (func $init_codegen))
@@ -38,10 +38,22 @@
   (import "codegen_error_handling" "generate_error_propagation_match" (func $generate_error_propagation_match (param i32) (result i32)))
   (import "codegen_error_handling" "validate_error_propagation" (func $validate_error_propagation (param i32) (result i32)))
 
+  ;; Inline function support
+  (import "codegen_inline" "init_inline_functions" (func $init_inline_functions))
+  (import "codegen_inline" "register_inline_function" (func $register_inline_function (param i32) (result i32)))
+  (import "codegen_inline" "can_inline_call" (func $can_inline_call (param i32) (result i32)))
+  (import "codegen_inline" "generate_inline_call" (func $generate_inline_call (param i32) (result i32)))
+  (import "codegen_inline" "get_inline_stats" (func $get_inline_stats (result i32)))
+
   ;; Import AST for tree traversal
   (import "ast_node_core" "get_node_type" (func $get_node_type (param i32) (result i32)))
   (import "ast_node_core" "get_child_count" (func $get_child_count (param i32) (result i32)))
   (import "ast_node_core" "get_child" (func $get_child (param i32 i32) (result i32)))
+
+  ;; Import AST helper functions for inline support
+  (import "ast_main" "get_function_inline_flag" (func $get_function_inline_flag (param i32) (result i32)))
+  (import "ast_main" "get_function_name_length" (func $get_function_name_length (param i32) (result i32)))
+  (import "ast_main" "get_function_name_ptr" (func $get_function_name_ptr (param i32) (result i32)))
 
   ;; Import AST node types
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
@@ -58,6 +70,7 @@
     (call $init_codegen)
     (call $init_type_strings)
     (call $reset_stack_tracking)
+    (call $init_inline_functions)
     (global.set $functions_generated (i32.const 0))
     (global.set $imports_generated (i32.const 0))
     (global.set $exports_generated (i32.const 0))
@@ -80,6 +93,9 @@
 
     ;; Initialize code generation
     (call $init_code_generation)
+
+    ;; Scan and register inline functions first
+    (drop (call $register_inline_functions_from_ast (local.get $ast_root)))
 
     ;; Generate module header
     (local.set $success (call $generate_module_header (local.get $module_name_ptr) (local.get $module_name_len)))
@@ -268,5 +284,45 @@
     (i32.store8 offset=50026 (i32.const 0) (i32.const 117)) ;; 'u'
     (i32.store8 offset=50027 (i32.const 0) (i32.const 110)) ;; 'n'
     (i32.store8 offset=50028 (i32.const 0) (i32.const 99))  ;; 'c'
+  )
+
+  ;; Scan AST for inline functions and register them
+  ;; @param ast_root i32 - Root AST node
+  ;; @returns i32 - Number of inline functions registered
+  (func $register_inline_functions_from_ast (export "register_inline_functions_from_ast")
+        (param $ast_root i32) (result i32)
+    (local $child_count i32)
+    (local $i i32)
+    (local $child_node i32)
+    (local $node_type i32)
+    (local $registered_count i32)
+
+    (local.set $registered_count (i32.const 0))
+    (local.set $child_count (call $get_child_count (local.get $ast_root)))
+    (local.set $i (i32.const 0))
+
+    (loop $scan_loop
+      (if (i32.lt_u (local.get $i) (local.get $child_count))
+        (then
+          (local.set $child_node (call $get_child (local.get $ast_root) (local.get $i)))
+          (local.set $node_type (call $get_node_type (local.get $child_node)))
+
+          ;; Check if this is a function declaration
+          (if (i32.eq (local.get $node_type) (global.get $DECL_FUNCTION))
+            (then
+              ;; Attempt to register as inline function
+              (if (call $register_inline_function (local.get $child_node))
+                (then
+                  (local.set $registered_count
+                    (i32.add (local.get $registered_count) (i32.const 1)))
+                )
+              )
+            )
+          )
+
+          (local.set $i (i32.add (local.get $i) (i32.const 1)))
+          (br $scan_loop))))
+
+    (local.get $registered_count)
   )
 )

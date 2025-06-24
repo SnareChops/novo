@@ -27,7 +27,7 @@
   (import "ast_node_types" "DECL_FUNCTION" (global $DECL_FUNCTION i32))
 
   ;; Import AST creation functions
-  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32 i32) (result i32)))
   (import "ast_node_core" "add_child" (func $add_child (param i32 i32) (result i32)))
 
   ;; Import utility functions
@@ -49,8 +49,10 @@
     (local $func_name_start i32)
     (local $func_name_len i32)
     (local $current_pos i32)
+    (local $is_inline i32)  ;; Track if function is declared inline
 
     (local.set $current_pos (local.get $pos))
+    (local.set $is_inline (i32.const 0))  ;; Default to not inline
 
     ;; Get first token
     (call $next_token (local.get $current_pos))
@@ -58,9 +60,10 @@
     (local.set $token) ;; First return value (token)
     (local.set $token_type (call $get_token_type (local.get $token)))
 
-    ;; Skip optional 'inline' keyword
+    ;; Check for optional 'inline' keyword
     (if (i32.eq (local.get $token_type) (global.get $TOKEN_KW_INLINE))
       (then
+        (local.set $is_inline (i32.const 1))  ;; Mark as inline
         (local.set $current_pos (local.get $next_pos))
         (call $next_token (local.get $current_pos))
         (local.set $next_pos) ;; Second return value (next position)
@@ -97,11 +100,12 @@
     (local.set $func_name_start (call $get_token_start (local.get $token)))
     (local.set $func_name_len (call $get_token_length (local.get $token)))
 
-    ;; Create function declaration node
+    ;; Create function declaration node with inline flag
     (local.set $func_node
       (call $create_decl_function
         (local.get $func_name_start)
-        (local.get $func_name_len)))
+        (local.get $func_name_len)
+        (local.get $is_inline)))
 
     (if (i32.eqz (local.get $func_node))
       (then

@@ -36,7 +36,7 @@
 
   ;; Import node creator functions
   (import "ast_type_creators" "create_type_primitive" (func $create_type_primitive (param i32) (result i32)))
-  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32) (result i32)))
+  (import "ast_declaration_creators" "create_decl_function" (func $create_decl_function (param i32 i32 i32) (result i32)))
   (import "ast_declaration_creators" "create_decl_component" (func $create_decl_component (param i32 i32) (result i32)))
   (import "ast_declaration_creators" "create_decl_interface" (func $create_decl_interface (param i32 i32) (result i32)))
   (import "ast_declaration_creators" "create_decl_import" (func $create_decl_import (param i32 i32 i32 i32) (result i32)))
@@ -47,6 +47,11 @@
   (import "ast_expression_creators" "create_string_literal" (func $create_string_literal (param i32 i32) (result i32)))
   (import "ast_expression_creators" "create_bool_literal" (func $create_bool_literal (param i32) (result i32)))
   (import "ast_expression_creators" "create_binary_expr" (func $create_binary_expr (param i32 i32 i32 i32) (result i32)))
+
+  ;; Import helper functions for declarations
+  (import "ast_declaration_creators" "get_function_inline_flag" (func $get_function_inline_flag (param i32) (result i32)))
+  (import "ast_declaration_creators" "get_function_name_length" (func $get_function_name_length (param i32) (result i32)))
+  (import "ast_declaration_creators" "get_function_name_ptr" (func $get_function_name_ptr (param i32) (result i32)))
 
   ;; Initialize the AST system
   ;; Must be called before using any other AST functions
@@ -73,6 +78,11 @@
   (export "create_string_literal" (func $create_string_literal))
   (export "create_bool_literal" (func $create_bool_literal))
   (export "create_binary_expr" (func $create_binary_expr))
+
+  ;; Export function helper functions
+  (export "get_function_inline_flag" (func $get_function_inline_flag))
+  (export "get_function_name_length" (func $get_function_name_length))
+  (export "get_function_name_ptr" (func $get_function_name_ptr))
 
   ;; Export node type constants for external use
   (export "TYPE_PRIMITIVE" (global $TYPE_PRIMITIVE))

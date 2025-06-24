@@ -104,6 +104,7 @@ build_modules=(
   "codegen/control-flow:codegen-control-flow"
   "codegen/patterns:codegen-patterns"
   "codegen/error-handling:codegen-error-handling"
+  "codegen/inline:codegen-inline"
   "codegen/main:codegen-main"
 
   # Binary code generation modules (Phase 7.3 - Binary WASM output correction)
@@ -209,6 +210,7 @@ preloads=(
   "codegen_control_flow=codegen-control-flow.wasm"
   "codegen_patterns=codegen-patterns.wasm"
   "codegen_error_handling=codegen-error-handling.wasm"
+  "codegen_inline=codegen-inline.wasm"
   "codegen_main=codegen-main.wasm"
   # Binary code generation modules (Phase 7.3 - Binary WASM output correction)
   "leb128_encoder=leb128-encoder.wasm"
@@ -319,12 +321,17 @@ for test in "${test_files[@]}"; do
     fi
 
     # Capture both stdout and stderr
+    # Build dependency module list instead of using preloads
+    dependency_modules=()
+    for preload in "${preloads[@]}"; do
+      module_path="${preload##*=}"
+      dependency_modules+=("$BUILD_DIR/$module_path")
+    done
+
     if output=$(wasmtime run \
       --wasm all-proposals=y \
       --dir . \
-      "${preload_args[@]}" \
-      "${pattern_preload_args[@]}" \
-      "${typechecker_preload_args[@]}" \
+      "${dependency_modules[@]}" \
       "$test" 2>&1); then
       echo "✅ PASS"
       passed_tests=$((passed_tests + 1))
