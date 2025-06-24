@@ -39,6 +39,7 @@ Recent fixes applied:
 - **Testing**: 100% test pass rate required for completion
 - **Integration**: New modules must integrate cleanly with existing systems
 - **Documentation**: Update plan.md and relevant documentation when completing steps
+- **Completion Reporting**: Update plan.md to mark steps as completed instead of creating separate completion reports
 - **Validation**: Use `wasmtime` for WASM validation and execution
 
 ### Novo Error Handling
@@ -57,6 +58,15 @@ Recent fixes applied:
 - Use consistent memory import patterns: `(import "memory" "memory" (memory 1))`
 
 **Remember: NO STEP IS COMPLETE UNTIL ALL TESTS PASS** ✅
+
+### Novo Completion Reporting
+
+- **Update plan.md directly**: Mark steps as completed by updating their status in plan.md
+- **No separate completion reports**: Avoid creating standalone completion report files
+- **Update phase status**: When all steps in a phase are complete, update the "COMPLETED PHASES" section
+- **Test count updates**: Update test statistics when new tests are added
+- **Status consistency**: Ensure step status matches actual implementation and test results
+- **Documentation integration**: Include completion details in the main project plan
 
 ### Component Model Support
 - .wit files define component interfaces that document our module boundaries
