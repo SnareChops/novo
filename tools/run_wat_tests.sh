@@ -112,6 +112,14 @@ build_modules=(
   "codegen/binary/sections:section-generator"
   "codegen/binary/encoder:binary-encoder"
   "codegen/binary_main:codegen-binary-main"
+
+  # Component code generation (Phase 8.3 - Component Code Generation)
+  "codegen/components:codegen-components"
+
+  # WIT export modules (Phase 8.2 - WIT Export Generation)
+  "wit-export/type-mapping:wit-export-type-mapping"
+  "wit-export/generator:wit-export-generator"
+  "wit-export/main:wit-export-main"
 )
 
 for pair in "${build_modules[@]}"; do
@@ -205,6 +213,14 @@ preloads=(
   "section_generator=section-generator.wasm"
   "binary_encoder=binary-encoder.wasm"
   "codegen_binary_main=codegen-binary-main.wasm"
+
+  # Component code generation (Phase 8.3 - Component Code Generation)
+  "codegen_components=codegen-components.wasm"
+
+  # WIT export modules (Phase 8.2 - WIT Export Generation)
+  "wit_export_type_mapping=wit-export-type-mapping.wasm"
+  "wit_export_generator=wit-export-generator.wasm"
+  "wit_export_main=wit-export-main.wasm"
 )
 preload_args=()
 for preload in "${preloads[@]}"; do
